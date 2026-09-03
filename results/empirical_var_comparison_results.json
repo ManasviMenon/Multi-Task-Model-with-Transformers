@@ -1,0 +1,342 @@
+{
+  "fold1_gfc": {
+    "test_start": "2008-01-01",
+    "test_end": "2009-12-31",
+    "calib_n": 250,
+    "eval_n": 251,
+    "parametric": {
+      "offset": -0.04117246236618853,
+      "raw": {
+        "breaches": 74,
+        "n": 251,
+        "coverage": 0.2948207171314741,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 4,
+        "n": 251,
+        "coverage": 0.01593625498007968,
+        "kupiec_p": 0.004062729758186334
+      }
+    },
+    "empirical": {
+      "125": {
+        "offset": -0.010064268387520753,
+        "raw": {
+          "breaches": 2,
+          "n": 251,
+          "coverage": 0.00796812749003984,
+          "kupiec_p": 0.00016317422287581707
+        },
+        "calibrated": {
+          "breaches": 0,
+          "n": 251,
+          "coverage": 0.0,
+          "kupiec_p": NaN
+        }
+      },
+      "250": {
+        "offset": -0.016432377379618873,
+        "raw": {
+          "breaches": 2,
+          "n": 251,
+          "coverage": 0.00796812749003984,
+          "kupiec_p": 0.00016317422287581707
+        },
+        "calibrated": {
+          "breaches": 0,
+          "n": 251,
+          "coverage": 0.0,
+          "kupiec_p": NaN
+        }
+      },
+      "500": {
+        "offset": -0.021761593108507452,
+        "raw": {
+          "breaches": 11,
+          "n": 251,
+          "coverage": 0.043824701195219126,
+          "kupiec_p": 0.6468496471131207
+        },
+        "calibrated": {
+          "breaches": 1,
+          "n": 251,
+          "coverage": 0.00398406374501992,
+          "kupiec_p": 1.619668967367538e-05
+        }
+      }
+    }
+  },
+  "fold2_eu_crisis": {
+    "test_start": "2011-01-01",
+    "test_end": "2013-12-31",
+    "calib_n": 375,
+    "eval_n": 375,
+    "parametric": {
+      "offset": -0.017480870525874475,
+      "raw": {
+        "breaches": 132,
+        "n": 375,
+        "coverage": 0.352,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 3,
+        "n": 375,
+        "coverage": 0.008,
+        "kupiec_p": 4.157583665787001e-06
+      }
+    },
+    "empirical": {
+      "125": {
+        "offset": -0.0034704063410404542,
+        "raw": {
+          "breaches": 16,
+          "n": 375,
+          "coverage": 0.042666666666666665,
+          "kupiec_p": 0.5043301767593842
+        },
+        "calibrated": {
+          "breaches": 6,
+          "n": 375,
+          "coverage": 0.016,
+          "kupiec_p": 0.00045838921659835385
+        }
+      },
+      "250": {
+        "offset": -0.00216536722547301,
+        "raw": {
+          "breaches": 12,
+          "n": 375,
+          "coverage": 0.032,
+          "kupiec_p": 0.08769393582663987
+        },
+        "calibrated": {
+          "breaches": 6,
+          "n": 375,
+          "coverage": 0.016,
+          "kupiec_p": 0.00045838921659835385
+        }
+      },
+      "500": {
+        "offset": -0.0014785360099237484,
+        "raw": {
+          "breaches": 3,
+          "n": 375,
+          "coverage": 0.008,
+          "kupiec_p": 4.157583665787001e-06
+        },
+        "calibrated": {
+          "breaches": 3,
+          "n": 375,
+          "coverage": 0.008,
+          "kupiec_p": 4.157583665787001e-06
+        }
+      }
+    }
+  },
+  "fold3_2015_selloff": {
+    "test_start": "2015-01-01",
+    "test_end": "2017-12-31",
+    "calib_n": 375,
+    "eval_n": 376,
+    "parametric": {
+      "offset": -0.012488669878782752,
+      "raw": {
+        "breaches": 159,
+        "n": 376,
+        "coverage": 0.4228723404255319,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 3,
+        "n": 376,
+        "coverage": 0.007978723404255319,
+        "kupiec_p": 3.9740358600548475e-06
+      }
+    },
+    "empirical": {
+      "125": {
+        "offset": 0.0012354151365005096,
+        "raw": {
+          "breaches": 14,
+          "n": 376,
+          "coverage": 0.03723404255319149,
+          "kupiec_p": 0.23508502169990775
+        },
+        "calibrated": {
+          "breaches": 19,
+          "n": 376,
+          "coverage": 0.05053191489361702,
+          "kupiec_p": 0.962317393187684
+        }
+      },
+      "250": {
+        "offset": -0.0012632187684504662,
+        "raw": {
+          "breaches": 9,
+          "n": 376,
+          "coverage": 0.023936170212765957,
+          "kupiec_p": 0.010157510949179938
+        },
+        "calibrated": {
+          "breaches": 8,
+          "n": 376,
+          "coverage": 0.02127659574468085,
+          "kupiec_p": 0.004069249904439909
+        }
+      },
+      "500": {
+        "offset": -0.001868252186350497,
+        "raw": {
+          "breaches": 4,
+          "n": 376,
+          "coverage": 0.010638297872340425,
+          "kupiec_p": 2.422546129476899e-05
+        },
+        "calibrated": {
+          "breaches": 3,
+          "n": 376,
+          "coverage": 0.007978723404255319,
+          "kupiec_p": 3.9740358600548475e-06
+        }
+      }
+    }
+  },
+  "fold4_covid": {
+    "test_start": "2019-01-01",
+    "test_end": "2020-12-31",
+    "calib_n": 250,
+    "eval_n": 251,
+    "parametric": {
+      "offset": -0.009020592222087752,
+      "raw": {
+        "breaches": 106,
+        "n": 251,
+        "coverage": 0.42231075697211157,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 44,
+        "n": 251,
+        "coverage": 0.1752988047808765,
+        "kupiec_p": 6.03073146976385e-13
+      }
+    },
+    "empirical": {
+      "125": {
+        "offset": 0.003034020356411171,
+        "raw": {
+          "breaches": 17,
+          "n": 251,
+          "coverage": 0.06772908366533864,
+          "kupiec_p": 0.2203148419667439
+        },
+        "calibrated": {
+          "breaches": 19,
+          "n": 251,
+          "coverage": 0.07569721115537849,
+          "kupiec_p": 0.08146841556836104
+        }
+      },
+      "250": {
+        "offset": 0.006833361772897897,
+        "raw": {
+          "breaches": 21,
+          "n": 251,
+          "coverage": 0.08366533864541832,
+          "kupiec_p": 0.024987966212674073
+        },
+        "calibrated": {
+          "breaches": 29,
+          "n": 251,
+          "coverage": 0.11553784860557768,
+          "kupiec_p": 4.064059115016505e-05
+        }
+      },
+      "500": {
+        "offset": 0.005037690698280725,
+        "raw": {
+          "breaches": 23,
+          "n": 251,
+          "coverage": 0.09163346613545817,
+          "kupiec_p": 0.006413136597598013
+        },
+        "calibrated": {
+          "breaches": 30,
+          "n": 251,
+          "coverage": 0.11952191235059761,
+          "kupiec_p": 1.531467211923765e-05
+        }
+      }
+    }
+  },
+  "fold5_2022_bear": {
+    "test_start": "2022-01-01",
+    "test_end": "2022-12-31",
+    "calib_n": 123,
+    "eval_n": 124,
+    "parametric": {
+      "offset": -0.02125245817449967,
+      "raw": {
+        "breaches": 69,
+        "n": 124,
+        "coverage": 0.5564516129032258,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 3,
+        "n": 124,
+        "coverage": 0.024193548387096774,
+        "kupiec_p": 0.1443909755485061
+      }
+    },
+    "empirical": {
+      "125": {
+        "offset": -0.009359805224643148,
+        "raw": {
+          "breaches": 3,
+          "n": 124,
+          "coverage": 0.024193548387096774,
+          "kupiec_p": 0.1443909755485061
+        },
+        "calibrated": {
+          "breaches": 1,
+          "n": 124,
+          "coverage": 0.008064516129032258,
+          "kupiec_p": 0.008255752610879297
+        }
+      },
+      "250": {
+        "offset": -0.01195303212866839,
+        "raw": {
+          "breaches": 3,
+          "n": 124,
+          "coverage": 0.024193548387096774,
+          "kupiec_p": 0.1443909755485061
+        },
+        "calibrated": {
+          "breaches": 1,
+          "n": 124,
+          "coverage": 0.008064516129032258,
+          "kupiec_p": 0.008255752610879297
+        }
+      },
+      "500": {
+        "offset": -0.010432622169757795,
+        "raw": {
+          "breaches": 9,
+          "n": 124,
+          "coverage": 0.07258064516129033,
+          "kupiec_p": 0.27832670574323226
+        },
+        "calibrated": {
+          "breaches": 2,
+          "n": 124,
+          "coverage": 0.016129032258064516,
+          "kupiec_p": 0.04490008839495052
+        }
+      }
+    }
+  }
+}

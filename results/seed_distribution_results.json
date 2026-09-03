@@ -1,0 +1,352 @@
+[
+  {
+    "fold": "fold1_gfc",
+    "seed": 42,
+    "uncalibrated_coverage": 0.2948207171314741,
+    "calibrated_coverage": 0.01593625498007968,
+    "calibrated_kupiec_p": 0.004062729758186334
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 43,
+    "uncalibrated_coverage": 0.3705179282868526,
+    "calibrated_coverage": 0.0199203187250996,
+    "calibrated_kupiec_p": 0.013262580616093644
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 44,
+    "uncalibrated_coverage": 0.38645418326693226,
+    "calibrated_coverage": 0.01593625498007968,
+    "calibrated_kupiec_p": 0.004062729758186334
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 45,
+    "uncalibrated_coverage": 0.3386454183266932,
+    "calibrated_coverage": 0.01593625498007968,
+    "calibrated_kupiec_p": 0.004062729758186334
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 46,
+    "uncalibrated_coverage": 0.3426294820717131,
+    "calibrated_coverage": 0.01593625498007968,
+    "calibrated_kupiec_p": 0.004062729758186334
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 47,
+    "uncalibrated_coverage": 0.2908366533864542,
+    "calibrated_coverage": 0.01593625498007968,
+    "calibrated_kupiec_p": 0.004062729758186334
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 48,
+    "uncalibrated_coverage": 0.4342629482071713,
+    "calibrated_coverage": 0.0199203187250996,
+    "calibrated_kupiec_p": 0.013262580616093644
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 49,
+    "uncalibrated_coverage": 0.3784860557768924,
+    "calibrated_coverage": 0.0199203187250996,
+    "calibrated_kupiec_p": 0.013262580616093644
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 50,
+    "uncalibrated_coverage": 0.32669322709163345,
+    "calibrated_coverage": 0.01195219123505976,
+    "calibrated_kupiec_p": 0.0009664182386924791
+  },
+  {
+    "fold": "fold1_gfc",
+    "seed": 51,
+    "uncalibrated_coverage": 0.28286852589641437,
+    "calibrated_coverage": 0.01593625498007968,
+    "calibrated_kupiec_p": 0.004062729758186334
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 42,
+    "uncalibrated_coverage": 0.352,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 43,
+    "uncalibrated_coverage": 0.36533333333333334,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 44,
+    "uncalibrated_coverage": 0.39466666666666667,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 45,
+    "uncalibrated_coverage": 0.42133333333333334,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 46,
+    "uncalibrated_coverage": 0.4186666666666667,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 47,
+    "uncalibrated_coverage": 0.4106666666666667,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 48,
+    "uncalibrated_coverage": 0.33066666666666666,
+    "calibrated_coverage": 0.010666666666666666,
+    "calibrated_kupiec_p": 2.5281311161973186e-05
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 49,
+    "uncalibrated_coverage": 0.44266666666666665,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 50,
+    "uncalibrated_coverage": 0.4266666666666667,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold2_eu_crisis",
+    "seed": 51,
+    "uncalibrated_coverage": 0.4026666666666667,
+    "calibrated_coverage": 0.008,
+    "calibrated_kupiec_p": 4.157583665787001e-06
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 42,
+    "uncalibrated_coverage": 0.4228723404255319,
+    "calibrated_coverage": 0.007978723404255319,
+    "calibrated_kupiec_p": 3.9740358600548475e-06
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 43,
+    "uncalibrated_coverage": 0.3882978723404255,
+    "calibrated_coverage": 0.007978723404255319,
+    "calibrated_kupiec_p": 3.9740358600548475e-06
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 44,
+    "uncalibrated_coverage": 0.39893617021276595,
+    "calibrated_coverage": 0.013297872340425532,
+    "calibrated_kupiec_p": 0.00011443646514386341
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 45,
+    "uncalibrated_coverage": 0.4521276595744681,
+    "calibrated_coverage": 0.013297872340425532,
+    "calibrated_kupiec_p": 0.00011443646514386341
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 46,
+    "uncalibrated_coverage": 0.44148936170212766,
+    "calibrated_coverage": 0.010638297872340425,
+    "calibrated_kupiec_p": 2.422546129476899e-05
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 47,
+    "uncalibrated_coverage": 0.34308510638297873,
+    "calibrated_coverage": 0.010638297872340425,
+    "calibrated_kupiec_p": 2.422546129476899e-05
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 48,
+    "uncalibrated_coverage": 0.40425531914893614,
+    "calibrated_coverage": 0.010638297872340425,
+    "calibrated_kupiec_p": 2.422546129476899e-05
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 49,
+    "uncalibrated_coverage": 0.4148936170212766,
+    "calibrated_coverage": 0.010638297872340425,
+    "calibrated_kupiec_p": 2.422546129476899e-05
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 50,
+    "uncalibrated_coverage": 0.3723404255319149,
+    "calibrated_coverage": 0.010638297872340425,
+    "calibrated_kupiec_p": 2.422546129476899e-05
+  },
+  {
+    "fold": "fold3_2015_selloff",
+    "seed": 51,
+    "uncalibrated_coverage": 0.4521276595744681,
+    "calibrated_coverage": 0.010638297872340425,
+    "calibrated_kupiec_p": 2.422546129476899e-05
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 42,
+    "uncalibrated_coverage": 0.42231075697211157,
+    "calibrated_coverage": 0.1752988047808765,
+    "calibrated_kupiec_p": 6.03073146976385e-13
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 43,
+    "uncalibrated_coverage": 0.42231075697211157,
+    "calibrated_coverage": 0.18326693227091634,
+    "calibrated_kupiec_p": 3.3306690738754696e-14
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 44,
+    "uncalibrated_coverage": 0.42231075697211157,
+    "calibrated_coverage": 0.17131474103585656,
+    "calibrated_kupiec_p": 2.4665824938097103e-12
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 45,
+    "uncalibrated_coverage": 0.4063745019920319,
+    "calibrated_coverage": 0.17131474103585656,
+    "calibrated_kupiec_p": 2.4665824938097103e-12
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 46,
+    "uncalibrated_coverage": 0.42231075697211157,
+    "calibrated_coverage": 0.17131474103585656,
+    "calibrated_kupiec_p": 2.4665824938097103e-12
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 47,
+    "uncalibrated_coverage": 0.4103585657370518,
+    "calibrated_coverage": 0.17928286852589642,
+    "calibrated_kupiec_p": 1.4355183708403274e-13
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 48,
+    "uncalibrated_coverage": 0.4262948207171315,
+    "calibrated_coverage": 0.18326693227091634,
+    "calibrated_kupiec_p": 3.3306690738754696e-14
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 49,
+    "uncalibrated_coverage": 0.41434262948207173,
+    "calibrated_coverage": 0.1752988047808765,
+    "calibrated_kupiec_p": 6.03073146976385e-13
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 50,
+    "uncalibrated_coverage": 0.41832669322709165,
+    "calibrated_coverage": 0.18725099601593626,
+    "calibrated_kupiec_p": 7.549516567451064e-15
+  },
+  {
+    "fold": "fold4_covid",
+    "seed": 51,
+    "uncalibrated_coverage": 0.41832669322709165,
+    "calibrated_coverage": 0.16733067729083664,
+    "calibrated_kupiec_p": 9.816814028340559e-12
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 42,
+    "uncalibrated_coverage": 0.5564516129032258,
+    "calibrated_coverage": 0.024193548387096774,
+    "calibrated_kupiec_p": 0.1443909755485061
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 43,
+    "uncalibrated_coverage": 0.5564516129032258,
+    "calibrated_coverage": 0.024193548387096774,
+    "calibrated_kupiec_p": 0.1443909755485061
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 44,
+    "uncalibrated_coverage": 0.5483870967741935,
+    "calibrated_coverage": 0.024193548387096774,
+    "calibrated_kupiec_p": 0.1443909755485061
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 45,
+    "uncalibrated_coverage": 0.5403225806451613,
+    "calibrated_coverage": 0.03225806451612903,
+    "calibrated_kupiec_p": 0.3336203680364791
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 46,
+    "uncalibrated_coverage": 0.5483870967741935,
+    "calibrated_coverage": 0.03225806451612903,
+    "calibrated_kupiec_p": 0.3336203680364791
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 47,
+    "uncalibrated_coverage": 0.5403225806451613,
+    "calibrated_coverage": 0.03225806451612903,
+    "calibrated_kupiec_p": 0.3336203680364791
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 48,
+    "uncalibrated_coverage": 0.5483870967741935,
+    "calibrated_coverage": 0.03225806451612903,
+    "calibrated_kupiec_p": 0.3336203680364791
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 49,
+    "uncalibrated_coverage": 0.5403225806451613,
+    "calibrated_coverage": 0.04032258064516129,
+    "calibrated_kupiec_p": 0.6093866769445049
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 50,
+    "uncalibrated_coverage": 0.5483870967741935,
+    "calibrated_coverage": 0.04032258064516129,
+    "calibrated_kupiec_p": 0.6093866769445049
+  },
+  {
+    "fold": "fold5_2022_bear",
+    "seed": 51,
+    "uncalibrated_coverage": 0.532258064516129,
+    "calibrated_coverage": 0.03225806451612903,
+    "calibrated_kupiec_p": 0.3336203680364791
+  }
+]
