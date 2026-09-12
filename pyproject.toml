@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mtl-var"
+version = "0.1.0"
+description = "Multi-task transformer for SPX500 risk forecasting, with regime-conditioned VaR calibration analysis"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Manasvi Menon", email = "manasvisanjiv.menon@student.uts.edu.au" }]
+keywords = ["value-at-risk", "multi-task-learning", "transformer", "quantitative-finance", "model-calibration"]
+
+# Pinned exactly to the versions the published results were produced under. The research
+# numbers in RESULTS.md are reproducible only against these; loosening them is a re-analysis,
+# not a packaging change.
+dependencies = [
+    "numpy==2.5.2",
+    "pandas==3.0.5",
+    "scikit-learn==1.9.0",
+    "scipy==1.18.1",
+    "tensorflow==2.21.0",
+]
+
+[project.optional-dependencies]
+# Only the classical-baseline comparison (RESULTS.md section 12) needs these.
+baselines = [
+    "statsmodels==0.15.0",
+    "arch==8.0.0",
+]
+dev = [
+    "pytest==8.4.2",
+    "ruff==0.14.4",
+]
+
+[project.scripts]
+mtl-var = "mtl_var.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+# Matches the width the research code was already written at (the FOLDS table and several
+# print statements run to ~145). Reformatting relocated research code to hit a narrower
+# limit would be churn against code that is deliberately kept verbatim.
+line-length = 145
+src = ["src", "scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# scripts/ is frozen research provenance - these files produced the numbers in RESULTS.md and
+# are not edited for style. Unused imports and import ordering there are left as they were.
+"scripts/*" = ["F401", "I001", "F541"]

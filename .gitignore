@@ -4,3 +4,8 @@ __pycache__/
 .ipynb_checkpoints/
 concept_model.keras
 best_trans_weights.weights.h5
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/

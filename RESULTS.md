@@ -20,7 +20,7 @@ residual. Fix: squeeze `y_pred` to `(batch,)` before the loss call.
 1. **Decisive retrain** (`verify_loss_bug_impact.py`): same seed/architecture/data, only the
    squeeze differs. Every task's MAE dropped 16–74%, and the single-split Kupiec result
    flipped from p=0.44 (pass) to p=0.015 (fail). Material, not noise.
-2. **Tiny hand-made example** (`test_loss_functions.py`): 3 known data points, expected huber
+2. **Tiny hand-made example** (`tests/test_loss_functions.py`): 3 known data points, expected huber
    / quantile-05 / log-cosh values computed independently in plain NumPy (not by calling
    anything in the codebase), then checked against `huber_loss`/`quantile_loss_05`/`log_cosh`
    and against `weighted_loss` fed an unsquashed `(N,1)` prediction (the real training-loop
@@ -390,6 +390,57 @@ point estimate) undersold how solid that finding actually is. It should read "4/
 robustly across 10 seeds each; the 5th passes robustly too, but likely due to reduced
 statistical power from a shorter test window rather than genuinely better calibration."
 
+## 12. Classical baselines for the single split (Persistence, ARIMA(1,0,1), GARCH(1,1), EWMA VaR)
+
+The paper's "final model vs. classical baselines" table had shipped with four baseline rows
+that didn't exist anywhere in this codebase — confirmed via grep across the notebook, every
+script, and every results JSON for "arima"/"garch"/"persistence": zero matches. `classical_
+baselines.py` actually builds and evaluates them, on the identical single 80/20 split the
+notebook's numbers come from (same 941-row test window, 2019-04-09 to 2022-12-30 — confirmed
+against the notebook's own printed `Train samples: 3760, Test samples: 941`). Reuses
+`load_and_engineer_features` and `kupiec_from_counts` from `walk_forward.py` unmodified.
+
+All four methods are deterministic (no training-seed dependence), and the run reproduced
+identically on a second execution — unlike the neural model, there's no seed-fragility
+question here.
+
+| Model | Ret. MAE | Vol. MAE | VaR Cov. |
+|---|---|---|---|
+| Persistence (naive) | 0.0143 | — | — |
+| ARIMA(1,0,1) | 0.0096 | — | 3.18% cov, p=0.053 (calibrated; barely passes) |
+| GARCH(1,1) | — | 0.0000587 | — |
+| EWMA VaR | — | — | 5.94% cov, p=0.360 (calibrated; comfortable pass) |
+| MTL Transformer (corrected) | **0.0042** | **0.00004** | 2.76% cov, p=0.0152 (**fail**) |
+
+Notes:
+- **Vol. MAE units**: `yz_vol` is a variance-scale quantity (test-period mean ≈1.5×10⁻⁴), not a
+  standard deviation (≈1.1×10⁻²). GARCH natively forecasts conditional variance, so it's
+  compared variance-to-variance — an earlier draft of this script accidentally compared
+  GARCH's *std* against `yz_vol`'s *variance* and got a meaningless ~200× inflated MAE; caught
+  by checking the actual scale of both quantities before trusting the number.
+- **VaR Cov. is the calibrated variant** for ARIMA and EWMA, matching how the MTL number is
+  reported (footnoted as calibrated) — both raw and calibrated are in
+  `results/classical_baselines_results.json` for full transparency. Raw: ARIMA 7.55% cov,
+  p=0.0008 (fail); EWMA 6.16% cov, p=0.113 (pass).
+- ARIMA's coefficients (const≈0.00024, AR(1)≈0.248, MA(1)≈−0.347) are both fit once on train
+  and frozen; one-step-ahead forecasts across test use `statsmodels`' `.append(refit=False)`
+  so parameters never see test data, matching how the MTL model is trained once and evaluated
+  frozen.
+
+**Pre-registered read, honored**: MTL clearly wins both MAE metrics — nearly 2.3× lower return
+error than ARIMA (and 3.4× lower than naive persistence), and a smaller volatility-proxy error
+than GARCH. **But it does not win on VaR coverage.** On this identical single split, both
+classical VaR methods pass Kupiec where the corrected MTL model fails: EWMA VaR passes
+comfortably (p=0.36), and even a simple ARIMA-residual VaR passes, if only barely (p=0.053, a
+hair over the 0.05 line). This is the honest picture the pre-registration asked for — better
+point-forecast accuracy did not buy better single-split VaR calibration, which is fully
+consistent with this document's central thesis (§2, §11): the multi-task model's single-split
+VaR result is fragile and this table adds one more data point showing it isn't automatically
+better than a naive parametric alternative on that axis. The walk-forward result (§9) remains
+the stronger, regime-robust version of this comparison, where empirical VaR fails 5/5 and the
+corrected parametric model fails only 4/5 — that comparison, not this single-split table,
+carries the paper's actual generalization claim.
+
 ## What to do next
 
 1. **The loss-shape bug is fixed and verified across five independent checks** (§0) — this
@@ -435,9 +486,23 @@ written):
 MTL_Improved.ipynb          the notebook — patched with the loss-shape fix + shape assertions
 RESULTS.md                  this file
 SPX500-18Y_scaled_y.csv     raw data
+pyproject.toml              packaging: pinned deps, version, `mtl-var` console entry point
+src/mtl_var/                the installable package (added in the Phase 1 packaging refactor —
+                             the research code was RELOCATED here, not rewritten):
+                               data.py         features, targets, load_and_engineer_features
+                               model.py        losses, architecture, the training loop
+                               calibration.py  frozen offset + rolling/triggered recalibration
+                               monitor.py      the 10-day/125-day volatility-ratio signal
+                               backtest.py     the Kupiec POF test
+                               pipeline.py     FOLDS, run_fold, the walk-forward campaign
+                               seeding.py      the single set_seeds() utility
+tests/                      pytest suite — loss verification (§0.2), Kupiec verification
+                             (§0.5), and parity tests asserting the refactor reproduces the
+                             recorded results exactly
 scripts/                    every investigation script — run as `python scripts/<name>.py`
                              from the repo root (not from inside scripts/) so the relative
-                             paths below resolve correctly
+                             paths below resolve correctly. `walk_forward.py` is now a thin
+                             re-export of the package, so these all still work unchanged.
 results/                    every JSON result + cached prediction, corrected and buggy-loss
                              side by side (nothing overwritten, nothing deleted)
 ```
@@ -445,12 +510,16 @@ results/                    every JSON result + cached prediction, corrected and
 **`scripts/` — corrected (current) pipeline:**
 - `walk_forward.py` — patched with the loss-shape fix and permanent shape assertions; the
   5-fold campaign (fixed-offset, rolling, triggered, monitor)
-- `test_loss_functions.py` — tiny-example loss verification (§0.2)
+- (the loss verification moved to `tests/test_loss_functions.py` in the packaging refactor —
+  §0.2; it runs under pytest now rather than as a standalone script)
 - `verify_loss_bug_impact.py`, `sanity_check_patched_loss.py` — the decisive retrain and the
   patch-consistency check (§0.1, §0.4)
 - `reanalyze_thresholds.py`, `reanalyze_window_length.py`, `empirical_var_comparison.py` —
   post-hoc sweeps (§6a, §8, §9), read from the corrected cache, no retraining needed
 - `single_task_var_ablation.py` — the MTL-vs-single-task ablation (§10)
+- `classical_baselines.py` — Persistence/ARIMA(1,0,1)/GARCH(1,1)/EWMA VaR baselines on the same
+  single-split test window (§12); requires `statsmodels` and `arch` (not previously project
+  dependencies — installed for this)
 - `verify_seed_sensitivity.py` — single-split seed-fragility check (§11 step 1); contains the
   `train_once_no_reseed` pattern to reuse for any future custom-seed training — do NOT reuse
   `verify_loss_bug_impact.train_once`, which re-seeds internally to a hardcoded 42
@@ -463,6 +532,8 @@ results/                    every JSON result + cached prediction, corrected and
 - `empirical_var_comparison_results.json` — §9 raw results
 - `single_task_ablation_results.json` — §10 raw results
 - `seed_distribution_results.json` — §11 raw results (all 50 fold×seed combinations)
+- `classical_baselines_results.json` — §12 raw results (Persistence/ARIMA/GARCH/EWMA VaR,
+  raw and calibrated variants)
 
 **`results/` — buggy-loss backups, preserved for the before/after record:**
 - `walk_forward_results_buggy_loss.json` — full buggy-trained campaign (fixed-offset, rolling,
@@ -482,7 +553,7 @@ investigation (two untracked Colab-exported notebooks, a personal scratch script
 
 ## Status
 
-Sections 0–11 done and closed. The verification checklist (§0) is complete: decisive retrain,
+Sections 0–12 done and closed. The verification checklist (§0) is complete: decisive retrain,
 independent hand-computed test, permanent shape assertions in both the notebook and
 `walk_forward.py`, confirmed-identical fix in both places, and a manual spot-check of the
 evaluation pipeline. The central thesis survives correction and strengthens in most respects:
@@ -495,4 +566,6 @@ VaR-only calibrates measurably better than the 5-head MTL model, consistent on t
 split and the majority of folds (§10). Adaptive window length remains the next candidate, not
 yet started. The rolling/triggered/threshold/window-length sweeps and the ablation still rest
 on one seed per fold — §11 established the fixed-offset baseline is seed-robust, not that
-everything built on top of it is.
+everything built on top of it is. Classical baselines (§12) are now real: MTL wins both MAE
+metrics decisively but loses the single-split VaR-coverage race to both ARIMA-residual and
+EWMA parametric VaR — a finding that fits the paper's thesis rather than undermining it.
