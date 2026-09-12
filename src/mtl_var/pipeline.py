@@ -28,10 +28,11 @@ import tensorflow as tf
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 
+from . import tracking
 from .calibration import fixed_offset_calibration, rolling_calibration_analysis
 from .data import DEFAULT_CSV, FEATURES, SEQUENCE_LENGTH, TARGETS, load_and_engineer_features, make_sequences
-from .model import train_model
-from .seeding import set_seeds
+from .model import WEIGHTS, train_model
+from .seeding import SEED, set_seeds
 
 RESULTS_PATH = "results/walk_forward_results.json"
 PREDICTIONS_DIR = "results/predictions"
@@ -82,13 +83,27 @@ def build_fold_data(fold_cfg, data):
     }
 
 
-def run_fold(fold_cfg, data):
+def run_fold(fold_cfg, data, seed=SEED):
+    """Train and evaluate one fold. Emits one MLflow run per (fold, seed) when tracking is on.
+
+    Tracking calls are deliberately kept off the seeding/training boundary: params go in after
+    the (RNG-free) data prep, metrics and the model artifact only after training has finished.
+    Verified inert - fold5 reproduces its recorded metrics bit-for-bit with tracking enabled.
+    """
+    with tracking.start_run(
+        run_name=f"{fold_cfg['name']}_seed{seed}",
+        tags={"fold": fold_cfg["name"], "seed": seed, "stage": "walk-forward"},
+    ):
+        return _run_fold_impl(fold_cfg, data, seed)
+
+
+def _run_fold_impl(fold_cfg, data, seed):
     print(f"\n===== {fold_cfg['name']}  train[{fold_cfg['train_start']}:{fold_cfg['train_end']}]  "
           f"test[{fold_cfg['test_start']}:{fold_cfg['test_end']}] =====", flush=True)
 
     tf.keras.backend.clear_session()
     gc.collect()
-    set_seeds()
+    set_seeds(seed)
 
     fd = build_fold_data(fold_cfg, data)
     X_train, X_test = fd["X_train"], fd["X_test"]
@@ -99,6 +114,9 @@ def run_fold(fold_cfg, data):
     print(f"n_train={len(X_train)}  n_test={len(X_test)}  n_features={len(FEATURES)}", flush=True)
 
     n_features = len(FEATURES)
+    tracking.log_params(tracking.fold_params(
+        fold_cfg, seed, len(X_train), len(X_test), n_features, SEQUENCE_LENGTH, TARGETS, WEIGHTS,
+    ))
     model, epochs_run, best_val_loss = train_model(X_train, y_train_z, X_test, y_test_z, n_features)
     print(f"trained {epochs_run} epochs, best val_loss={best_val_loss:.6f}", flush=True)
 
@@ -176,6 +194,12 @@ def run_fold(fold_cfg, data):
 
     print(f"VaR uncalibrated coverage={N0/T0:.4f} (kupiec p={p0})  "
           f"calibrated coverage={N1/T1:.4f} (kupiec p={p1})", flush=True)
+
+    tracking.log_metrics(tracking.fold_metrics(result))
+    model_uri = tracking.log_model(model, input_example=X_test[:2])
+    if model_uri:
+        result["mlflow_model_uri"] = model_uri
+        print(f"logged model to mlflow: {model_uri}", flush=True)
 
     return result
 

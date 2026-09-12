@@ -29,6 +29,7 @@ from walk_forward import (
     weighted_loss, load_and_engineer_features, kupiec_from_counts, make_sequences,
 )
 from verify_seed_sensitivity import set_seeds_custom, train_once_no_reseed
+from mtl_var import tracking
 
 SEEDS = list(range(42, 52))  # 10 seeds: 42 (the original reference) through 51
 RESULTS_PATH = "results/seed_distribution_results.json"
@@ -127,6 +128,23 @@ def main():
                 "calibrated_coverage": r["calibrated"]["coverage"],
                 "calibrated_kupiec_p": r["calibrated"]["kupiec_p"],
             }
+
+            # Added in the MLflow phase: one run per (fold, seed) so the campaign is
+            # comparable in the UI. Deliberately a single call placed AFTER training rather
+            # than a context manager around the loop body - nothing may sit between
+            # set_seeds_custom and train_once_no_reseed above.
+            tracking.log_standalone_run(
+                run_name=f"{fold}_seed{seed}",
+                tags={"fold": fold, "seed": seed, "campaign": "seed-distribution",
+                      "stage": "fixed-offset-baseline"},
+                params={"fold": fold, "seed": seed, "n_train": len(X_train), "n_test": len(X_test),
+                        "n_features": n_features, **tracking.ARCHITECTURE, **tracking.TRAINING_DEFAULTS},
+                metrics={"var_uncal_coverage": r["uncalibrated"]["coverage"],
+                         "var_uncal_kupiec_p": r["uncalibrated"]["kupiec_p"],
+                         "var_cal_coverage": r["calibrated"]["coverage"],
+                         "var_cal_kupiec_p": r["calibrated"]["kupiec_p"],
+                         "var_offset": r["offset"]},
+            )
             results.append(row)
             with open(RESULTS_PATH, "w") as f:
                 json.dump(results, f, indent=2)

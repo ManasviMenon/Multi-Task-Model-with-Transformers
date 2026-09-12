@@ -17,11 +17,34 @@ def main(argv=None):
     wf = sub.add_parser("walk-forward", help="run the 5-fold regime-conditioned walk-forward campaign")
     wf.add_argument("--csv", default=DEFAULT_CSV, help=f"path to the OHLCV csv (default: {DEFAULT_CSV})")
 
+    bf = sub.add_parser("backfill-mlflow",
+                        help="create MLflow runs from already-recorded results (no retraining)")
+    bf.add_argument("--experiment", default=None, help="MLflow experiment name")
+
+    sub.add_parser("tracking-info", help="show the MLflow tracking backend this install will write to")
+
     args = parser.parse_args(argv)
 
     if args.command == "walk-forward":
         from .pipeline import main as run_walk_forward
         run_walk_forward(csv_path=args.csv)
+        return 0
+
+    if args.command == "backfill-mlflow":
+        from . import tracking
+        from .backfill import main as run_backfill
+        run_backfill(experiment=args.experiment or tracking.DEFAULT_EXPERIMENT)
+        return 0
+
+    if args.command == "tracking-info":
+        from . import tracking
+        print(f"mlflow installed: {tracking.MLFLOW_AVAILABLE}")
+        print(f"tracking enabled: {tracking.tracking_enabled()}")
+        print(f"tracking uri:     {tracking.DEFAULT_TRACKING_URI}")
+        print(f"artifact root:    {tracking.DEFAULT_ARTIFACT_ROOT}")
+        print(f"experiment:       {tracking.DEFAULT_EXPERIMENT}")
+        print(f"git commit:       {tracking.git_commit()}")
+        print(f"\nview the ui with:  mlflow ui --backend-store-uri {tracking.DEFAULT_TRACKING_URI}")
         return 0
 
     parser.error(f"unknown command {args.command}")
