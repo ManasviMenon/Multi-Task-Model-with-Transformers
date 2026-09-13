@@ -1,0 +1,136 @@
+{
+  "log_close_ret_equals_log_return": true,
+  "max_abs_difference": 0.0,
+  "feature_information_time": {
+    "log_open_ret": "t",
+    "log_high_ret": "t",
+    "log_low_ret": "t",
+    "log_close_ret": "t",
+    "log_volume_lag1": "t-1",
+    "log_volume_lag5": "t-5",
+    "ret_lag1": "t-1",
+    "ret_lag2": "t-2",
+    "ret_lag3": "t-3",
+    "ret_lag4": "t-4",
+    "ret_lag5": "t-5",
+    "yz_vol_lag1": "t-1",
+    "VaR_5_lag1": "t-1",
+    "drawdown": "t",
+    "ret_min20": "t",
+    "ret_max20": "t",
+    "CVaR_5_lag1": "t-1",
+    "ret_skew20": "t"
+  },
+  "contaminated_features": [
+    "log_open_ret",
+    "log_high_ret",
+    "log_low_ret",
+    "log_close_ret",
+    "drawdown",
+    "ret_min20",
+    "ret_max20",
+    "ret_skew20"
+  ],
+  "clean_features": [
+    "log_volume_lag1",
+    "log_volume_lag5",
+    "ret_lag1",
+    "ret_lag2",
+    "ret_lag3",
+    "ret_lag4",
+    "ret_lag5",
+    "yz_vol_lag1",
+    "VaR_5_lag1",
+    "CVaR_5_lag1"
+  ],
+  "target_recoverability_r2": {
+    "log_return": {
+      "r2_all_features": 1.0,
+      "r2_lagged_only": 0.019032559785664982
+    },
+    "log_volume": {
+      "r2_all_features": 0.8154127459715796,
+      "r2_lagged_only": 0.7930553017552623
+    },
+    "yz_vol": {
+      "r2_all_features": 0.9960443996944981,
+      "r2_lagged_only": 0.9937049738195792
+    },
+    "VaR_5": {
+      "r2_all_features": 0.9999782031013785,
+      "r2_lagged_only": 0.5936509129469592
+    },
+    "CVaR_5": {
+      "r2_all_features": 1.0,
+      "r2_lagged_only": 0.9623209882832066
+    }
+  },
+  "raw_target_backtest": {
+    "fold1_gfc": {
+      "raw_target": {
+        "coverage": 0.01195219123505976,
+        "kupiec_p": 0.0009664182386924791,
+        "verdict": "FAIL"
+      },
+      "trained_model": {
+        "coverage": 0.01593625498007968,
+        "kupiec_p": 0.004062729758186334,
+        "verdict": "FAIL"
+      },
+      "agree": true
+    },
+    "fold2_eu_crisis": {
+      "raw_target": {
+        "coverage": 0.008,
+        "kupiec_p": 4.157583665787001e-06,
+        "verdict": "FAIL"
+      },
+      "trained_model": {
+        "coverage": 0.008,
+        "kupiec_p": 4.157583665787001e-06,
+        "verdict": "FAIL"
+      },
+      "agree": true
+    },
+    "fold3_2015_selloff": {
+      "raw_target": {
+        "coverage": 0.007978723404255319,
+        "kupiec_p": 3.9740358600548475e-06,
+        "verdict": "FAIL"
+      },
+      "trained_model": {
+        "coverage": 0.007978723404255319,
+        "kupiec_p": 3.9740358600548475e-06,
+        "verdict": "FAIL"
+      },
+      "agree": true
+    },
+    "fold4_covid": {
+      "raw_target": {
+        "coverage": 0.18725099601593626,
+        "kupiec_p": 7.549516567451064e-15,
+        "verdict": "FAIL"
+      },
+      "trained_model": {
+        "coverage": 0.1752988047808765,
+        "kupiec_p": 6.03073146976385e-13,
+        "verdict": "FAIL"
+      },
+      "agree": true
+    },
+    "fold5_2022_bear": {
+      "raw_target": {
+        "coverage": 0.03225806451612903,
+        "kupiec_p": 0.3336203680364791,
+        "verdict": "PASS"
+      },
+      "trained_model": {
+        "coverage": 0.024193548387096774,
+        "kupiec_p": 0.1443909755485061,
+        "verdict": "PASS"
+      },
+      "agree": true
+    }
+  },
+  "folds_in_agreement": 5
+}

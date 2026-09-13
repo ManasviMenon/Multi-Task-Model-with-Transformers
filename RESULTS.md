@@ -3,6 +3,11 @@
 > **✅ Loss-shape bug: found, verified, fixed, and re-run. This document reflects the
 > corrected numbers.** A prior version of this file (and the buggy `weighted_loss` it was
 > generated from) is preserved — see "Files" at the bottom for the full before/after record.
+>
+> **⚠️ Read §13 before citing any accuracy number.** `log_close_ret` is bit-identical to the
+> `log_return` target, and 8 of 18 features embed day-*t* information. The per-task MAE/RMSE
+> results measure reconstruction, not forecasting. The VaR calibration conclusions (§3–§9,
+> §11) are unaffected — §13 verifies they reproduce with no model in the loop at all.
 
 Multi-task transformer on SPX500 daily data (2004–2022) predicting log-return, log-volume,
 Yang-Zhang volatility, VaR₅, and CVaR₅. Summary of everything found and fixed, in order.
@@ -427,6 +432,12 @@ Notes:
   so parameters never see test data, matching how the MTL model is trained once and evaluated
   frozen.
 
+> ⚠️ **The MAE comparison in this table is not like-for-like — see §13.** `log_close_ret` is
+> bit-identical to the `log_return` target, so the transformer reads day *t*'s close off its
+> own input while ARIMA genuinely forecasts day *t* from *t−1*. The VaR-coverage column is
+> unaffected (§13 shows the calibration result is model-independent); the accuracy columns
+> should not be read as forecasting skill.
+
 **Pre-registered read, honored**: MTL clearly wins both MAE metrics — nearly 2.3× lower return
 error than ARIMA (and 3.4× lower than naive persistence), and a smaller volatility-proxy error
 than GARCH. **But it does not win on VaR coverage.** On this identical single split, both
@@ -440,6 +451,137 @@ better than a naive parametric alternative on that axis. The walk-forward result
 the stronger, regime-robust version of this comparison, where empirical VaR fails 5/5 and the
 corrected parametric model fails only 4/5 — that comparison, not this single-split table,
 carries the paper's actual generalization claim.
+
+## 13. Target leakage: the accuracy numbers measure reconstruction, not forecasting
+
+Found while wiring up live monitoring, by checking what "the realized outcome" even means for
+a prediction. It is the most serious finding in this document and it invalidates part of it.
+
+**`log_close_ret` is bit-identical to the `log_return` target.** `Close` equals `Adj Close` on
+all 4705 rows, so `log(Close_t / AdjClose_{t-1})` *is* `log_return_t`: max absolute difference
+**0.0**, correlation exactly 1.0. Feature 4 of 18 is target 1 of 5.
+
+It is not confined to that pair. Sequences and targets are aligned on the same row —
+`make_sequences` produces `X[j]` covering rows `j..j+4` while `y[j]` is row `j+4` — so the
+input window contains day *t*'s own high, low and close, and the target is day *t*'s value.
+**8 of 18 features embed day-t information**: `log_open_ret`, `log_high_ret`, `log_low_ret`,
+`log_close_ret`, `drawdown`, `ret_min20`, `ret_max20`, `ret_skew20`. The task as built is
+reconstruction of contemporaneous quantities, not forecasting.
+
+### How much of each target is simply computable from the inputs
+
+In-sample linear R² of each target on the features (`scripts/leakage_audit.py`). A value at
+1.0 means no learning is required — the answer is a deterministic function of what is fed in.
+
+| Target | R², all 18 features | R², lagged-only features |
+|---|---|---|
+| log_return | **1.0000000000** | **0.0190** |
+| log_volume | 0.8154 | 0.7931 |
+| yz_vol | 0.9960 | 0.9937 |
+| VaR₅ | **0.9999782** | 0.5937 |
+| CVaR₅ | **1.0000000000** | 0.9623 |
+
+The right-hand column is what matters for damage assessment, and it splits the five heads
+into three groups:
+
+- **Return: entirely leakage.** R² collapses 1.0000 → 0.0190. Essentially all apparent skill
+  was the target being handed to the model as an input. Genuine daily-return predictability of
+  ~2% is what market efficiency would lead you to expect.
+- **Volatility and CVaR: largely legitimate.** `yz_vol` barely moves (0.9960 → 0.9937) and
+  CVaR₅ holds up (1.0000 → 0.9623). Volatility is persistent, so `yz_vol_lag1` already carries
+  almost all of it. These heads were never leakage-dependent.
+- **VaR: in between.** 0.99998 → 0.5937. Roughly half the target is genuinely available from
+  lagged information.
+
+### What this invalidates
+
+**The accuracy table (§1) and the Table 1 baseline comparison.** "MTL 0.0042 vs ARIMA 0.0096"
+is not like-for-like: ARIMA forecasts day *t* from *t−1*, while the transformer reads day *t*'s
+close off its own input. The model is in fact *worse than the trivial copy baseline* — copying
+`log_close_ret` gives MAE exactly 0.0 against the model's 0.0042 — which is the clearest
+possible statement that the return head is not doing forecasting work. Any framing of this
+project as "a transformer that forecasts next-day returns" is unsupported. The Methodology's
+"(i) next-day log-return" is also inconsistent with the implementation, which is same-day.
+
+### What survives — tested, not assumed
+
+The central calibration thesis does **not** depend on the model. Re-running the walk-forward
+calibration backtest on the **raw VaR₅ target with no model at all**, through the identical
+half/half offset protocol and Kupiec code:
+
+| Fold | Raw target: coverage / p | Trained model: coverage / p | Agree? |
+|---|---|---|---|
+| 2008 GFC | 1.20% / 0.000966 (FAIL) | 1.59% / 0.00406 (FAIL) | yes |
+| 2011 EU crisis | 0.80% / 4.15758e-06 (FAIL) | 0.80% / 4.15758e-06 (FAIL) | yes |
+| 2015 selloff | 0.80% / 3.97404e-06 (FAIL) | 0.80% / 3.97404e-06 (FAIL) | yes |
+| 2020 COVID | 18.73% / 7.5e-15 (FAIL) | 17.53% / 6.0e-13 (FAIL) | yes |
+| 2022 bear | 3.23% / 0.334 (PASS) | 2.42% / 0.144 (PASS) | yes |
+
+**5 of 5 folds agree**, and for EU crisis and 2015 selloff the raw target reproduces the
+model's numbers to six significant figures — identical breach counts. The finding is a
+property of **the parametric target definition and the offset procedure under regime shift**,
+not of a neural forecaster.
+
+This also retro-explains three things that were previously odd:
+- GFC's results were **bit-for-bit identical between the buggy and corrected models** across
+  four separate configurations (§4, §6, §7, §8). If the VaR head is reconstructing a
+  deterministic target, model quality genuinely cannot matter.
+- The 10-seed distribution had standard deviations as low as 0.08% (§11) — near-deterministic,
+  because the network is approximating a closed-form quantity.
+- Empirical VaR behaved so similarly under the same protocol (§9).
+
+### What the leakage was worth: a leakage-free retrain
+
+`scripts/leakage_free_retrain.py` retrains fold5 with each of the 8 contaminated features
+replaced by its one-day lag. Same architecture, losses, weights, optimiser, early stopping,
+folds, calibration protocol and seed — **only information timing changes**.
+
+| Task | Leaky MAE | Leakage-free MAE | Ratio |
+|---|---|---|---|
+| log_return | 0.003859 | 0.012851 | **3.33× worse** |
+| VaR₅ | 0.001315 | 0.004932 | **3.75× worse** |
+| log_volume | 0.106622 | 0.107103 | 1.00× |
+| CVaR₅ | 0.003304 | 0.003089 | 0.93× (**better**) |
+| yz_vol | 0.000036 | 0.000032 | 0.89× (**better**) |
+
+Every pre-registered expectation held: return degrades badly, VaR moderately, `yz_vol` barely.
+Two results are worth stating plainly beyond that.
+
+**The return head does not beat a constant.** On fold5's exact 247-day window:
+
+| Predictor | MAE |
+|---|---|
+| Leaky model (reads day *t*'s close from its own input) | 0.003859 |
+| **Predict zero** | **0.012040** |
+| Leakage-free model | 0.012851 |
+| Persistence (yesterday's return) | 0.017191 |
+
+Once the leak is removed the transformer is *slightly worse than forecasting zero*. It beats
+naive persistence, and that is the whole of its return skill. This is the expected outcome for
+daily equity returns given the 0.019 R² above, but it should be stated rather than implied.
+
+**Removing the leaky features improved two heads.** `yz_vol` and CVaR₅ both got better (0.89×,
+0.93×). The contaminated features were not merely unhelpful for those targets, they were
+actively costing accuracy — the persistent, lagged signal is the real driver and the day-*t*
+terms were noise the model spent capacity on.
+
+The task is also genuinely harder now, as it should be: training stopped at 16 epochs instead
+of 50, with best val_loss 0.1736 against 0.0567.
+
+**The calibration verdict is unchanged** — fold5 passes either way (leaky 2.42%, p=0.144;
+leakage-free 3.23%, p=0.334). The leakage-free model lands on **exactly** the raw-target
+backtest's numbers (3.23%, p=0.3336, same breach count), which is a third independent
+confirmation that calibration behaviour is a property of the target and the offset procedure,
+not of the network.
+
+**Corrected framing.** This is a study of *post-hoc calibration of a parametric VaR estimator
+under regime shift*, in which a transformer is used to approximate the estimator. The
+calibration conclusions (§3–§9, §11) stand. The forecasting-accuracy conclusions do not.
+
+**Not yet done**: only fold5 was retrained leakage-free. The other four folds, and the
+single-split and ablation numbers, still rest on the leaky feature set. Their *calibration*
+verdicts are covered by the raw-target backtest above, which needs no model at all; their
+*accuracy* figures should be treated as reconstruction, not forecasting, until re-run.
 
 ## What to do next
 
@@ -474,6 +616,12 @@ carries the paper's actual generalization claim.
     the ablation (§10) all rest on the single seed=42 model per fold. §11 shows the
     fixed-offset baseline is robust to that choice; whether the same holds for every sweep
     built on top of it hasn't been tested and would be its own multi-hour undertaking.
+11. **Target leakage invalidates every accuracy number** (§13). `log_close_ret` IS the
+    `log_return` target and 8 of 18 features embed day-*t* information. The calibration thesis
+    survives — verified by reproducing all 5 fold verdicts with no model at all — but the
+    project must be described as calibration research, not return forecasting. Remaining work:
+    retrain the other four folds leakage-free (only fold5 is done), and decide whether to
+    re-run §10's ablation on the clean feature set.
 
 ## Files
 
@@ -520,6 +668,10 @@ results/                    every JSON result + cached prediction, corrected and
 - `classical_baselines.py` — Persistence/ARIMA(1,0,1)/GARCH(1,1)/EWMA VaR baselines on the same
   single-split test window (§12); requires `statsmodels` and `arch` (not previously project
   dependencies — installed for this)
+- `leakage_audit.py` — the §13 feature audit, target-recoverability R², and the decisive
+  raw-target backtest that runs the calibration protocol with no model at all
+- `leakage_free_retrain.py` — retrains a fold with every day-*t* feature lagged, to measure
+  what the leakage was worth
 - `verify_seed_sensitivity.py` — single-split seed-fragility check (§11 step 1); contains the
   `train_once_no_reseed` pattern to reuse for any future custom-seed training — do NOT reuse
   `verify_loss_bug_impact.train_once`, which re-seeds internally to a hardcoded 42
@@ -534,6 +686,7 @@ results/                    every JSON result + cached prediction, corrected and
 - `seed_distribution_results.json` — §11 raw results (all 50 fold×seed combinations)
 - `classical_baselines_results.json` — §12 raw results (Persistence/ARIMA/GARCH/EWMA VaR,
   raw and calibrated variants)
+- `leakage_audit_results.json`, `leakage_free_retrain_results.json` — §13 raw results
 
 **`results/` — buggy-loss backups, preserved for the before/after record:**
 - `walk_forward_results_buggy_loss.json` — full buggy-trained campaign (fixed-offset, rolling,
@@ -553,7 +706,7 @@ investigation (two untracked Colab-exported notebooks, a personal scratch script
 
 ## Status
 
-Sections 0–12 done and closed. The verification checklist (§0) is complete: decisive retrain,
+Sections 0–13 done and closed. The verification checklist (§0) is complete: decisive retrain,
 independent hand-computed test, permanent shape assertions in both the notebook and
 `walk_forward.py`, confirmed-identical fix in both places, and a manual spot-check of the
 evaluation pipeline. The central thesis survives correction and strengthens in most respects:
@@ -569,3 +722,8 @@ on one seed per fold — §11 established the fixed-offset baseline is seed-robu
 everything built on top of it is. Classical baselines (§12) are now real: MTL wins both MAE
 metrics decisively but loses the single-split VaR-coverage race to both ARIMA-residual and
 EWMA parametric VaR — a finding that fits the paper's thesis rather than undermining it.
+§13 then found target leakage: `log_close_ret` is bit-identical to the `log_return` target, so
+that MAE win is not a like-for-like comparison and the accuracy results measure reconstruction
+rather than forecasting. The calibration thesis was tested against this and survives — all five
+fold verdicts reproduce with no model in the loop — but the framing is now explicitly
+"calibration of a parametric VaR estimator", not "a transformer that forecasts VaR".
