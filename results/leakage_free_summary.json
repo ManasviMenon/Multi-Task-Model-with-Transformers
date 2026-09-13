@@ -1,0 +1,312 @@
+{
+  "folds": {
+    "fold1_gfc": {
+      "accuracy": {
+        "log_return": {
+          "leaky_mae": 0.014957444113181301,
+          "clean_mae": 0.015541209849685763,
+          "ratio": 1.0390284417636577
+        },
+        "log_volume": {
+          "leaky_mae": 0.5710635924094538,
+          "clean_mae": 0.5752721701917598,
+          "ratio": 1.0073697182559809
+        },
+        "yz_vol": {
+          "leaky_mae": 0.0002378794443696057,
+          "clean_mae": 0.00023600843732063997,
+          "ratio": 0.992134641755516
+        },
+        "VaR_5": {
+          "leaky_mae": 0.005588758828269812,
+          "clean_mae": 0.005354017350666417,
+          "ratio": 0.9579975653241657
+        },
+        "CVaR_5": {
+          "leaky_mae": 0.016764427701508378,
+          "clean_mae": 0.017442646247961078,
+          "ratio": 1.0404558126604988
+        }
+      },
+      "naive_baselines": {
+        "predict_zero": 0.014924522624014377,
+        "persistence": 0.02301209552067481
+      },
+      "beats_predict_zero": false
+    },
+    "fold2_eu_crisis": {
+      "accuracy": {
+        "log_return": {
+          "leaky_mae": 0.006027421542088954,
+          "clean_mae": 0.007769966357654466,
+          "ratio": 1.2891028615465958
+        },
+        "log_volume": {
+          "leaky_mae": 0.17006017151321734,
+          "clean_mae": 0.1617679203572711,
+          "ratio": 0.9512393108735531
+        },
+        "yz_vol": {
+          "leaky_mae": 5.052028246912121e-05,
+          "clean_mae": 3.3021740013151134e-05,
+          "ratio": 0.653633321098997
+        },
+        "VaR_5": {
+          "leaky_mae": 0.00330903982564721,
+          "clean_mae": 0.003855871851137909,
+          "ratio": 1.1652539873507703
+        },
+        "CVaR_5": {
+          "leaky_mae": 0.004172139280566614,
+          "clean_mae": 0.004186601626214128,
+          "ratio": 1.0034664100776496
+        }
+      },
+      "naive_baselines": {
+        "predict_zero": 0.007249880050446175,
+        "persistence": 0.010710260145885714
+      },
+      "beats_predict_zero": false
+    },
+    "fold3_2015_selloff": {
+      "accuracy": {
+        "log_return": {
+          "leaky_mae": 0.0027662513224865773,
+          "clean_mae": 0.005348514412570685,
+          "ratio": 1.9334882442145267
+        },
+        "log_volume": {
+          "leaky_mae": 0.121113776673375,
+          "clean_mae": 0.13305919694912755,
+          "ratio": 1.0986297397691387
+        },
+        "yz_vol": {
+          "leaky_mae": 1.3217365003737139e-05,
+          "clean_mae": 1.4600469743655384e-05,
+          "ratio": 1.1046430010465156
+        },
+        "VaR_5": {
+          "leaky_mae": 0.0009127328133821603,
+          "clean_mae": 0.0025227464025802874,
+          "ratio": 2.763948403730738
+        },
+        "CVaR_5": {
+          "leaky_mae": 0.0016837292160518493,
+          "clean_mae": 0.0024893877923852135,
+          "ratio": 1.4784965234626863
+        }
+      },
+      "naive_baselines": {
+        "predict_zero": 0.005296621201997156,
+        "persistence": 0.007901925494312645
+      },
+      "beats_predict_zero": false
+    },
+    "fold4_covid": {
+      "accuracy": {
+        "log_return": {
+          "leaky_mae": 0.005454668685988583,
+          "clean_mae": 0.009575781045109555,
+          "ratio": 1.7555201968007481
+        },
+        "log_volume": {
+          "leaky_mae": 0.1647064629132228,
+          "clean_mae": 0.14464898321520897,
+          "ratio": 0.8782228739343318
+        },
+        "yz_vol": {
+          "leaky_mae": 5.77745157395971e-05,
+          "clean_mae": 5.3083605677511346e-05,
+          "ratio": 0.9188065879560332
+        },
+        "VaR_5": {
+          "leaky_mae": 0.0019743047883835933,
+          "clean_mae": 0.004241531331980981,
+          "ratio": 2.1483670388368026
+        },
+        "CVaR_5": {
+          "leaky_mae": 0.005307478709278041,
+          "clean_mae": 0.0063244817880571905,
+          "ratio": 1.1916169869888162
+        }
+      },
+      "naive_baselines": {
+        "predict_zero": 0.00956047096740049,
+        "persistence": 0.014664357779195492
+      },
+      "beats_predict_zero": false
+    },
+    "fold5_2022_bear": {
+      "accuracy": {
+        "log_return": {
+          "leaky_mae": 0.0038592754646273263,
+          "clean_mae": 0.012850581831356322,
+          "ratio": 3.3297912909145624
+        },
+        "log_volume": {
+          "leaky_mae": 0.106622027610257,
+          "clean_mae": 0.10710293664309893,
+          "ratio": 1.0045104097494735
+        },
+        "yz_vol": {
+          "leaky_mae": 3.613739842308584e-05,
+          "clean_mae": 3.20157319226045e-05,
+          "ratio": 0.8859445704356992
+        },
+        "VaR_5": {
+          "leaky_mae": 0.001314734641089321,
+          "clean_mae": 0.004931808379378447,
+          "ratio": 3.7511815884703594
+        },
+        "CVaR_5": {
+          "leaky_mae": 0.0033038270491293543,
+          "clean_mae": 0.0030890412710871526,
+          "ratio": 0.9349887948587371
+        }
+      },
+      "naive_baselines": {
+        "predict_zero": 0.012040434085541344,
+        "persistence": 0.017190775203987894
+      },
+      "beats_predict_zero": false
+    }
+  },
+  "single_split": {
+    "case": "single_split_mtl",
+    "epochs_run": 20,
+    "best_val_loss": 0.19761533414324126,
+    "n_train": 3760,
+    "n_test": 940,
+    "accuracy": {
+      "log_return": {
+        "mae": 0.009684252152481773,
+        "rmse": 0.014904060457846527
+      },
+      "log_volume": {
+        "mae": 0.15655824065306478,
+        "rmse": 0.22138882248349098
+      },
+      "yz_vol": {
+        "mae": 3.954634389636419e-05,
+        "rmse": 0.0001359890823435415
+      },
+      "VaR_5": {
+        "mae": 0.004194056915034445,
+        "rmse": 0.00544798740239713
+      },
+      "CVaR_5": {
+        "mae": 0.00470510718026449,
+        "rmse": 0.009953813275482214
+      }
+    },
+    "var_calibration": {
+      "calib_n": 470,
+      "eval_n": 470,
+      "offset": -0.018942191847061394,
+      "uncalibrated": {
+        "breaches": 169,
+        "coverage": 0.3595744680851064,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 20,
+        "coverage": 0.0425531914893617,
+        "kupiec_p": 0.4476330253096711
+      }
+    }
+  },
+  "ablation": {
+    "fold1_gfc": {
+      "mtl": {
+        "breaches": 4,
+        "coverage": 0.01593625498007968,
+        "kupiec_p": 0.004062729758186334
+      },
+      "single_task": {
+        "breaches": 5,
+        "coverage": 0.0199203187250996,
+        "kupiec_p": 0.013262580616093644
+      },
+      "direction": "single BETTER"
+    },
+    "fold2_eu_crisis": {
+      "mtl": {
+        "breaches": 3,
+        "coverage": 0.008,
+        "kupiec_p": 4.157583665787001e-06
+      },
+      "single_task": {
+        "breaches": 3,
+        "coverage": 0.008,
+        "kupiec_p": 4.157583665787001e-06
+      },
+      "direction": "identical"
+    },
+    "fold3_2015_selloff": {
+      "mtl": {
+        "breaches": 4,
+        "coverage": 0.010638297872340425,
+        "kupiec_p": 2.422546129476899e-05
+      },
+      "single_task": {
+        "breaches": 4,
+        "coverage": 0.010638297872340425,
+        "kupiec_p": 2.422546129476899e-05
+      },
+      "direction": "identical"
+    },
+    "fold4_covid": {
+      "mtl": {
+        "breaches": 35,
+        "coverage": 0.1394422310756972,
+        "kupiec_p": 6.954987119556222e-08
+      },
+      "single_task": {
+        "breaches": 40,
+        "coverage": 0.1593625498007968,
+        "kupiec_p": 1.4305656659274746e-10
+      },
+      "direction": "single WORSE"
+    },
+    "fold5_2022_bear": {
+      "mtl": {
+        "breaches": 4,
+        "coverage": 0.03225806451612903,
+        "kupiec_p": 0.3336203680364791
+      },
+      "single_task": {
+        "breaches": 3,
+        "coverage": 0.024193548387096774,
+        "kupiec_p": 0.1443909755485061
+      },
+      "direction": "single WORSE"
+    }
+  },
+  "verdict_agreement": {
+    "fold1_gfc": {
+      "clean_verdict": "FAIL",
+      "raw_target_verdict": "FAIL",
+      "agree": true
+    },
+    "fold2_eu_crisis": {
+      "clean_verdict": "FAIL",
+      "raw_target_verdict": "FAIL",
+      "agree": true
+    },
+    "fold3_2015_selloff": {
+      "clean_verdict": "FAIL",
+      "raw_target_verdict": "FAIL",
+      "agree": true
+    },
+    "fold4_covid": {
+      "clean_verdict": "FAIL",
+      "raw_target_verdict": "FAIL",
+      "agree": true
+    },
+    "fold5_2022_bear": {
+      "clean_verdict": "PASS",
+      "raw_target_verdict": "PASS",
+      "agree": true
+    }
+  }
+}

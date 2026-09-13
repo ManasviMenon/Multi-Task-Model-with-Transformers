@@ -29,6 +29,7 @@ PRE-REGISTERED EXPECTATIONS, written before running:
 Writes a new JSON. Does not modify any existing result, script, or the notebook.
 """
 import json
+import os
 import sys
 
 import numpy as np
@@ -124,9 +125,16 @@ def main():
     with open(WALK_FORWARD_PATH) as f:
         leaky = {r["fold"]: r for r in json.load(f) if "error" not in r}
 
+    # Resume rather than overwrite: these are multi-hour runs and fold5 was done separately.
     results = []
+    if os.path.exists(RESULTS_PATH):
+        with open(RESULTS_PATH) as f:
+            results = json.load(f)
+        print(f"resuming: {sorted(r['fold'] for r in results)} already done")
+
+    done = {r["fold"] for r in results}
     for fold_cfg in FOLDS:
-        if fold_cfg["name"] not in folds:
+        if fold_cfg["name"] not in folds or fold_cfg["name"] in done:
             continue
         res = run_fold_clean(fold_cfg, clean, names)
         results.append(res)

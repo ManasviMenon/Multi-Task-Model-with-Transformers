@@ -95,6 +95,11 @@ the first half, apply it to the untouched second half.
 | Uncalibrated | 48.20% | ≈0 (fail) | 30.6% / ≈0 (fail) |
 | Calibrated | **2.76%** | **0.0152 (fail)** | 4.25% / 0.44 (pass) |
 
+> ⚠️ **Superseded — see §13.** Retrained leakage-free (and with the feature scaler fit
+> train-only rather than on the full dataset) this split gives 4.26%, p=0.448, a PASS.
+> Combined with §11's seed-fragility, the single-split verdict should not be relied on
+> at all; the walk-forward folds are the evidence.
+
 **The single split's one clean pass does not survive the loss fix.** The corrected model is
 substantially more accurate (§1) but its VaR quantile sits in a different place relative to
 the 5% target — worse, not better, on this split. This is the finding that made re-running
@@ -332,6 +337,11 @@ direction consistent across the single split AND a majority of folds counts as a
 | 2015 selloff | 0.80%, p=4.0×10⁻⁶ | 1.06%, p=2.4×10⁻⁵ | single BETTER |
 | 2020 COVID | 17.53%, p=6.0×10⁻¹³ | 17.93%, p=1.4×10⁻¹³ | single WORSE |
 | 2022 bear | 2.42%, p=0.144 | **4.84%, p=0.934** | single BETTER |
+
+> ⚠️ **This section's conclusion is WITHDRAWN — see §13.** Retrained on leakage-free
+> features the direction reverses to 1 better / 2 identical / 2 worse, so the finding was
+> an artifact of the contaminated feature set. Head count makes no consistent difference
+> to VaR calibration.
 
 **Pre-registered read: single-task is directionally better in the single split AND the
 majority of folds (3/5) — consistent, so this is a real finding: the multi-task burden costs
@@ -578,10 +588,96 @@ not of the network.
 under regime shift*, in which a transformer is used to approximate the estimator. The
 calibration conclusions (§3–§9, §11) stand. The forecasting-accuracy conclusions do not.
 
-**Not yet done**: only fold5 was retrained leakage-free. The other four folds, and the
-single-split and ablation numbers, still rest on the leaky feature set. Their *calibration*
-verdicts are covered by the raw-target backtest above, which needs no model at all; their
-*accuracy* figures should be treated as reconstruction, not forecasting, until re-run.
+### The complete corrected accuracy table
+
+All five folds, the single split, and the §10 ablation were retrained leakage-free — 11
+further training runs. Every figure below comes from `scripts/leakage_free_retrain.py`,
+`scripts/leakage_free_ablation.py` and `scripts/leakage_free_report.py`.
+
+**Per-fold MAE, leaky → leakage-free (ratio):**
+
+| Fold | log_return | log_volume | yz_vol | VaR₅ | CVaR₅ |
+|---|---|---|---|---|---|
+| 2008 GFC | 0.014957 → 0.015541 (1.04×) | 0.571 → 0.575 (1.01×) | 2.38e-4 → 2.36e-4 (0.99×) | 0.005589 → 0.005354 (**0.96×**) | 0.016764 → 0.017443 (1.04×) |
+| 2011 EU crisis | 0.006027 → 0.007770 (1.29×) | 0.170 → 0.162 (**0.95×**) | 5.1e-5 → 3.3e-5 (**0.65×**) | 0.003309 → 0.003856 (1.17×) | 0.004172 → 0.004187 (1.00×) |
+| 2015 selloff | 0.002766 → 0.005349 (1.93×) | 0.121 → 0.133 (1.10×) | 1.3e-5 → 1.5e-5 (1.10×) | 0.000913 → 0.002523 (**2.76×**) | 0.001684 → 0.002489 (1.48×) |
+| 2020 COVID | 0.005455 → 0.009576 (1.76×) | 0.165 → 0.145 (**0.88×**) | 5.8e-5 → 5.3e-5 (**0.92×**) | 0.001974 → 0.004242 (2.15×) | 0.005307 → 0.006324 (1.19×) |
+| 2022 bear | 0.003859 → 0.012851 (**3.33×**) | 0.107 → 0.107 (1.00×) | 3.6e-5 → 3.2e-5 (**0.89×**) | 0.001315 → 0.004932 (**3.75×**) | 0.003304 → 0.003089 (**0.93×**) |
+
+**Single split** (this one also fixes a second, separate flaw — the original fits the feature
+scaler on the whole dataset, a documented quirk inherited from the notebook; the leakage-free
+version fits train-only, as the folds always did, so it differs in two respects):
+
+| Task | Leaky | Leakage-free |
+|---|---|---|
+| log_return | 0.00423 | 0.009684 |
+| log_volume | 0.13237 | 0.156558 |
+| yz_vol | 0.00004 | 0.000040 |
+| VaR₅ | 0.00150 | 0.004194 |
+| CVaR₅ | 0.00384 | 0.004705 |
+
+### Three things the full re-run establishes
+
+**1. The return head has no forecasting skill on any fold.** Against the naive baselines on
+each fold's own evaluation window:
+
+| Fold | Leakage-free MAE | Predict zero | Persistence | Beats zero? |
+|---|---|---|---|---|
+| 2008 GFC | 0.015541 | 0.014925 | 0.023012 | **no** |
+| 2011 EU crisis | 0.007770 | 0.007250 | 0.010710 | **no** |
+| 2015 selloff | 0.005349 | 0.005297 | 0.007902 | **no** |
+| 2020 COVID | 0.009576 | 0.009560 | 0.014664 | **no** |
+| 2022 bear | 0.012851 | 0.012040 | 0.017191 | **no** |
+
+**0 of 5.** The model loses to a constant zero forecast on every fold, by a small but
+consistent margin. It beats naive persistence everywhere, but persistence is a poor baseline
+for daily returns. This is the honest summary of the return head: no skill, as the 0.019
+lagged R² predicted.
+
+**2. The leakage's cost scales with training-set size.** GFC (924 training sequences) barely
+moved at 1.04×; 2022 bear (4,450) degraded 3.33×. The model needs enough data to *learn* to
+exploit the leak, so the smallest fold — already performing at roughly the predict-zero level —
+had the least to lose. 2020 COVID is the one inversion in an otherwise monotone pattern.
+Several volatility and volume heads got *better* once the contaminated features were removed.
+
+**3. Calibration verdicts are unchanged, 5 of 5, and still match the model-free backtest.**
+
+| Fold | Leakage-free model | Raw target, no model | Agree |
+|---|---|---|---|
+| 2008 GFC | 1.59%, p=0.00406 FAIL | 1.20%, p=0.000966 FAIL | yes |
+| 2011 EU crisis | 0.80%, p=4.15758e-06 FAIL | 0.80%, p=4.15758e-06 FAIL | yes |
+| 2015 selloff | 1.06%, p=2.42255e-05 FAIL | 0.80%, p=3.97404e-06 FAIL | yes |
+| 2020 COVID | 13.94%, p=6.95e-08 FAIL | 18.73%, p=7.55e-15 FAIL | yes |
+| 2022 bear | 3.23%, p=0.3336 PASS | 3.23%, p=0.3336 PASS | yes |
+
+GFC and EU crisis reproduce the *leaky* model's numbers exactly as well — identical breach
+counts across three different models. The thesis is now confirmed four independent ways.
+
+### Two results that did change
+
+**The single-split verdict flips: FAIL → PASS** (2.76%, p=0.0152 → **4.26%, p=0.448**). This
+does not rescue the single split as evidence; it condemns it further. §11 already showed that
+verdict is seed-fragile, with 3 of 4 alternate seeds flipping fail→pass. It now also flips
+under a feature-timing change. The walk-forward folds remain the only trustworthy evidence.
+
+**§10's ablation conclusion does not survive.** On the leaky features, single-task VaR-only
+calibrated better on the single split and in 3 of 5 folds, which was reported as a real
+finding: "the multi-task burden costs VaR calibration." Leakage-free:
+
+| Case | 5-head MTL | Single-task | Direction |
+|---|---|---|---|
+| Single split | 4.26%, p=0.448 | 4.68%, p=0.748 | single better |
+| 2008 GFC | 1.59%, p=0.00406 | 1.99%, p=0.0133 | single better |
+| 2011 EU crisis | 0.80%, p=4.15758e-06 | 0.80%, p=4.15758e-06 | **identical** |
+| 2015 selloff | 1.06%, p=2.42255e-05 | 1.06%, p=2.42255e-05 | **identical** |
+| 2020 COVID | 13.94%, p=6.95e-08 | 15.94%, p=1.43e-10 | single worse |
+| 2022 bear | 3.23%, p=0.3336 | 2.42%, p=0.1444 | single worse |
+
+**1 better, 2 identical, 2 worse.** The pre-registration for this re-run said a reversal was a
+real possible outcome and would be reported as one; it was. §10's conclusion was an artifact of
+the leaky feature set and should be withdrawn — the honest statement is that head count makes
+no consistent difference to VaR calibration, which is what the model-independence of the whole
+calibration result would predict anyway.
 
 ## What to do next
 
@@ -617,11 +713,13 @@ verdicts are covered by the raw-target backtest above, which needs no model at a
     fixed-offset baseline is robust to that choice; whether the same holds for every sweep
     built on top of it hasn't been tested and would be its own multi-hour undertaking.
 11. **Target leakage invalidates every accuracy number** (§13). `log_close_ret` IS the
-    `log_return` target and 8 of 18 features embed day-*t* information. The calibration thesis
-    survives — verified by reproducing all 5 fold verdicts with no model at all — but the
-    project must be described as calibration research, not return forecasting. Remaining work:
-    retrain the other four folds leakage-free (only fold5 is done), and decide whether to
-    re-run §10's ablation on the clean feature set.
+    `log_return` target and 8 of 18 features embed day-*t* information. All five folds, the
+    single split and the ablation have now been retrained leakage-free (11 runs). Outcome: the
+    calibration thesis survives untouched (5/5 verdicts unchanged, still matching a backtest
+    with no model at all), the return head turns out to have **no forecasting skill on any
+    fold** — it loses to predicting zero 5 times out of 5 — the single-split verdict flips
+    FAIL→PASS, and §10's ablation conclusion is withdrawn as a leakage artifact. The project is
+    calibration research, not return forecasting.
 
 ## Files
 
@@ -672,6 +770,9 @@ results/                    every JSON result + cached prediction, corrected and
   raw-target backtest that runs the calibration protocol with no model at all
 - `leakage_free_retrain.py` — retrains a fold with every day-*t* feature lagged, to measure
   what the leakage was worth
+- `leakage_free_ablation.py` — leakage-free single split and the §10 single-task ablation
+- `leakage_free_report.py` — assembles the corrected accuracy table, checks the return head
+  against naive baselines, and re-verifies verdicts against the model-free backtest
 - `verify_seed_sensitivity.py` — single-split seed-fragility check (§11 step 1); contains the
   `train_once_no_reseed` pattern to reuse for any future custom-seed training — do NOT reuse
   `verify_loss_bug_impact.train_once`, which re-seeds internally to a hardcoded 42
@@ -686,7 +787,8 @@ results/                    every JSON result + cached prediction, corrected and
 - `seed_distribution_results.json` — §11 raw results (all 50 fold×seed combinations)
 - `classical_baselines_results.json` — §12 raw results (Persistence/ARIMA/GARCH/EWMA VaR,
   raw and calibrated variants)
-- `leakage_audit_results.json`, `leakage_free_retrain_results.json` — §13 raw results
+- `leakage_audit_results.json`, `leakage_free_retrain_results.json`,
+  `leakage_free_ablation_results.json`, `leakage_free_summary.json` — §13 raw results
 
 **`results/` — buggy-loss backups, preserved for the before/after record:**
 - `walk_forward_results_buggy_loss.json` — full buggy-trained campaign (fixed-offset, rolling,
