@@ -98,9 +98,14 @@ def register(model_uri, fold, seed, csv_path="SPX500-18Y_scaled_y.csv", metrics=
         "mlflow_model_uri": model_uri,
         **data_fingerprint(csv_path),
     }
-    for key in ("var_cal_coverage", "var_cal_kupiec_p", "best_val_loss", "mae_log_return"):
+    # var_offset is load-bearing for serving, not just documentation: it is the post-hoc
+    # calibration constant added to the raw VaR head, so the model alone is not servable
+    # without it.
+    for key in ("var_offset", "var_cal_coverage", "var_cal_kupiec_p", "best_val_loss", "mae_log_return"):
         if metrics.get(key) is not None:
-            tags[key] = f"{metrics[key]:.10g}"
+            # repr round-trips exactly; a shortened format would quietly perturb the offset
+            # that serving adds to every VaR prediction.
+            tags[key] = repr(float(metrics[key]))
 
     for k, v in tags.items():
         client.set_model_version_tag(name, version.version, k, v)

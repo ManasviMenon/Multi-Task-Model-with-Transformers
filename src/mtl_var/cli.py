@@ -37,6 +37,11 @@ def main(argv=None):
 
     sub.add_parser("registry-info", help="list registry versions with their aliases and lineage")
 
+    srv = sub.add_parser("serve", help="run the FastAPI prediction service")
+    srv.add_argument("--host", default="127.0.0.1")
+    srv.add_argument("--port", type=int, default=8000)
+    srv.add_argument("--reload", action="store_true", help="auto-reload on code changes (dev only)")
+
     args = parser.parse_args(argv)
 
     if args.command == "walk-forward":
@@ -48,6 +53,11 @@ def main(argv=None):
         from . import tracking
         from .backfill import main as run_backfill
         run_backfill(experiment=args.experiment or tracking.DEFAULT_EXPERIMENT)
+        return 0
+
+    if args.command == "serve":
+        import uvicorn
+        uvicorn.run("mtl_var.serve:app", host=args.host, port=args.port, reload=args.reload)
         return 0
 
     if args.command == "register-model":

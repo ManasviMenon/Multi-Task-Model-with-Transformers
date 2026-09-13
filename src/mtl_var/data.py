@@ -23,9 +23,30 @@ DEFAULT_CSV = "SPX500-18Y_scaled_y.csv"
 
 
 def load_and_engineer_features(csv_path):
+    """Read the OHLCV csv and engineer the feature/target columns.
+
+    The two lines before `engineer_features` are specific to this csv's layout (a trailing
+    block of empty columns, and a first row that isn't data). Serving takes the
+    `engineer_features` path directly with an in-memory frame instead.
+    """
     data = pd.read_csv(csv_path, parse_dates=['observation_date'], dayfirst=True)
     data = data.dropna(axis=1, how='all')
     data = data.drop(index=0)
+    return engineer_features(data)
+
+
+def engineer_features(data):
+    """The feature/target engineering itself, on an OHLCV frame already loaded.
+
+    Moved out of `load_and_engineer_features` verbatim so inference can build features from
+    request payloads through the identical code path - if serving engineered features even
+    slightly differently from training, every prediction would be quietly wrong. A test
+    asserts both paths produce byte-identical output on the project csv.
+
+    The NaN-drop cascade is why inference needs a long history: the rolling(20) terms and the
+    lag chain consume roughly 78 leading rows before the first usable row appears.
+    """
+    data = data.copy()
 
     data['ret'] = data['Adj Close'].pct_change(fill_method=None)
     data['log_return'] = np.log(data['Adj Close'] / data['Adj Close'].shift(1))

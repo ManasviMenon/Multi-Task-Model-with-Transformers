@@ -22,6 +22,8 @@ dependencies = [
     "scipy==1.18.1",
     "tensorflow==2.21.0",
     "mlflow==3.16.0",
+    "fastapi==0.121.2",
+    "uvicorn[standard]==0.39.0",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +35,7 @@ baselines = [
 dev = [
     "pytest==8.4.2",
     "ruff==0.14.4",
+    "httpx==0.28.1",
 ]
 
 [project.scripts]
