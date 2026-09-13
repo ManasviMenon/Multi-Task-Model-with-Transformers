@@ -37,6 +37,12 @@ def main(argv=None):
 
     sub.add_parser("registry-info", help="list registry versions with their aliases and lineage")
 
+    reb = sub.add_parser("rebase-registry",
+                         help="rewrite absolute artifact paths in the tracking db (for containers)")
+    reb.add_argument("--db", default="mlruns/mlflow.db", help="path to the tracking sqlite db")
+    reb.add_argument("--to", required=True, help="new mlruns root, e.g. /app/mlruns")
+    reb.add_argument("--dry-run", action="store_true")
+
     srv = sub.add_parser("serve", help="run the FastAPI prediction service")
     srv.add_argument("--host", default="127.0.0.1")
     srv.add_argument("--port", type=int, default=8000)
@@ -79,6 +85,11 @@ def main(argv=None):
     if args.command == "promote-model":
         from . import registry
         registry.set_alias(args.version, args.alias)
+        return 0
+
+    if args.command == "rebase-registry":
+        from . import registry
+        registry.rebase_artifact_paths(args.db, args.to, dry_run=args.dry_run)
         return 0
 
     if args.command == "registry-info":

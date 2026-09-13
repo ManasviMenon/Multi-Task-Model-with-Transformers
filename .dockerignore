@@ -1,0 +1,32 @@
+# Keep the build context small and the image free of things serving never reads.
+
+.git/
+.github/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Research provenance, not serving inputs. The notebook, the standalone experiment scripts,
+# and the recorded results are the paper's evidence; the container only needs the package,
+# the registry, and the csv.
+MTL_Improved.ipynb
+.ipynb_checkpoints/
+scripts/
+tests/
+results/
+RESULTS.md
+
+# Model artifacts the notebook rewrites on every run.
+concept_model.keras
+best_trans_weights.weights.h5
+
+# Logs and local run output.
+*.log
+mlartifacts/
+
+# mlruns/ is deliberately NOT ignored - the Dockerfile copies it in as the model registry.

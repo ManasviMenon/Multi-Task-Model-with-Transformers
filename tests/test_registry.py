@@ -112,6 +112,72 @@ def test_describe_reports_aliases_against_versions(tiny_model_uri, capsys):
     assert "@production" in capsys.readouterr().out
 
 
+def _fake_tracking_db(path, host_root="file:D:/Multi-Task-Model-with-Transformers/mlruns"):
+    """Minimal stand-in for the MLflow schema, with just the path-bearing columns."""
+    import sqlite3
+
+    con = sqlite3.connect(str(path))
+    cur = con.cursor()
+    cur.execute("CREATE TABLE runs (artifact_uri TEXT)")
+    cur.execute("CREATE TABLE logged_models (artifact_location TEXT)")
+    cur.execute("CREATE TABLE experiments (artifact_location TEXT)")
+    cur.execute("CREATE TABLE model_versions (storage_location TEXT, source TEXT)")
+    cur.execute("INSERT INTO runs VALUES (?)", (f"{host_root}/artifacts/abc/artifacts",))
+    cur.execute("INSERT INTO logged_models VALUES (?)", (f"{host_root}/artifacts/models/m-1/artifacts",))
+    cur.execute("INSERT INTO experiments VALUES (?)", (f"{host_root}/0",))
+    cur.execute("INSERT INTO model_versions VALUES (?, ?)",
+                (f"{host_root}/artifacts/models/m-1/artifacts", "models:/m-1"))
+    con.commit()
+    con.close()
+
+
+def test_rebase_rewrites_every_absolute_artifact_path(tmp_path):
+    """The container bug: copied stores keep the host's absolute paths and every artifact
+    lookup fails with "No such artifact: ''"."""
+    import sqlite3
+
+    db = tmp_path / "mlflow.db"
+    _fake_tracking_db(db)
+
+    assert registry.rebase_artifact_paths(db, "/app/mlruns") == 4
+
+    con = sqlite3.connect(str(db))
+    values = [
+        con.execute("SELECT artifact_uri FROM runs").fetchone()[0],
+        con.execute("SELECT artifact_location FROM logged_models").fetchone()[0],
+        con.execute("SELECT artifact_location FROM experiments").fetchone()[0],
+        con.execute("SELECT storage_location FROM model_versions").fetchone()[0],
+    ]
+    source = con.execute("SELECT source FROM model_versions").fetchone()[0]
+    con.close()
+
+    assert all(v.startswith("file:/app/mlruns") for v in values), values
+    assert "D:/Multi-Task-Model-with-Transformers" not in " ".join(values)
+    assert source == "models:/m-1"  # a models:/ reference is not a path and must be left alone
+
+
+def test_rebase_dry_run_reports_without_writing(tmp_path):
+    import sqlite3
+
+    db = tmp_path / "mlflow.db"
+    _fake_tracking_db(db)
+
+    assert registry.rebase_artifact_paths(db, "/app/mlruns", dry_run=True) == 4
+
+    con = sqlite3.connect(str(db))
+    still_host = con.execute("SELECT artifact_uri FROM runs").fetchone()[0]
+    con.close()
+    assert "D:/Multi-Task-Model-with-Transformers" in still_host
+
+
+def test_rebase_is_idempotent(tmp_path):
+    db = tmp_path / "mlflow.db"
+    _fake_tracking_db(db)
+
+    registry.rebase_artifact_paths(db, "/app/mlruns")
+    assert registry.rebase_artifact_paths(db, "/app/mlruns") == 0  # nothing left to change
+
+
 def test_registry_is_noop_when_tracking_disabled(monkeypatch):
     monkeypatch.setenv("MTL_VAR_TRACKING", "0")
     assert registry.register("models:/whatever", fold="f", seed=1) is None

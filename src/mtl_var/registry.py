@@ -194,6 +194,61 @@ def describe(name=REGISTERED_MODEL_NAME):
     return rows
 
 
+# Columns in the MLflow SQLite schema that store absolute artifact paths. Found by scanning
+# every text column for the host root rather than guessing from the schema docs.
+_ARTIFACT_PATH_COLUMNS = [
+    ("runs", "artifact_uri"),
+    ("logged_models", "artifact_location"),
+    ("experiments", "artifact_location"),
+    ("model_versions", "storage_location"),
+]
+
+
+def rebase_artifact_paths(db_path, new_root, dry_run=False):
+    """Rewrite absolute artifact paths in a tracking DB to sit under `new_root`.
+
+    MLflow resolves a relative artifact location to an absolute one when the experiment is
+    created, so the store carries the host's paths. Copy mlruns/ into a container and every
+    artifact lookup fails with `No such artifact: ''` - the model is physically present but
+    the recorded path does not exist there. This rewrites the four columns that hold such
+    paths so the registry is portable.
+
+    Matches any `file:...` URI up to and including a `/mlruns` segment, so it works regardless
+    of where the store was originally created.
+    """
+    import re
+    import sqlite3
+
+    pattern = re.compile(r"^file:.*?/mlruns")
+    replacement = f"file:{str(new_root).replace(os.sep, '/').rstrip('/')}"
+
+    con = sqlite3.connect(str(db_path))
+    changed = 0
+    try:
+        cur = con.cursor()
+        for table, column in _ARTIFACT_PATH_COLUMNS:
+            try:
+                rows = cur.execute(f'SELECT rowid, "{column}" FROM "{table}"').fetchall()
+            except sqlite3.OperationalError:
+                continue  # table absent in this MLflow version
+            for rowid, value in rows:
+                if not value or not isinstance(value, str):
+                    continue
+                new_value = pattern.sub(replacement, value)
+                if new_value != value:
+                    changed += 1
+                    if not dry_run:
+                        cur.execute(f'UPDATE "{table}" SET "{column}" = ? WHERE rowid = ?',
+                                    (new_value, rowid))
+        if not dry_run:
+            con.commit()
+    finally:
+        con.close()
+
+    print(f"{'would rewrite' if dry_run else 'rewrote'} {changed} artifact paths -> {replacement}")
+    return changed
+
+
 def find_logged_model(fold="fold5_2022_bear", provenance="live", experiment=tracking.DEFAULT_EXPERIMENT):
     """Most recent logged model whose source run matches this fold and provenance."""
     import mlflow
