@@ -650,8 +650,17 @@ Several volatility and volume heads got *better* once the contaminated features 
 | 2020 COVID | 13.94%, p=6.95e-08 FAIL | 18.73%, p=7.55e-15 FAIL | yes |
 | 2022 bear | 3.23%, p=0.3336 PASS | 3.23%, p=0.3336 PASS | yes |
 
-GFC and EU crisis reproduce the *leaky* model's numbers exactly as well — identical breach
-counts across three different models. The thesis is now confirmed four independent ways.
+The leakage-free model reproduces the *leaky* model's numbers exactly on GFC and EU crisis —
+identical breach counts. Across every variant tested — the leaky model, the leakage-free
+retrain, the single-task ablation and the model-free raw-target backtest — the **verdicts**
+agree on all 5 folds. Breach counts are identical across all four only for EU crisis; on the
+other folds the variants land on different coverages that fall on the same side of the Kupiec
+line. The thesis therefore rests on verdict agreement across independent variants, not on any
+one model's numbers.
+
+*(Correction: an earlier version of this paragraph said GFC and EU crisis showed "identical
+breach counts across three different models". That overstated it — on GFC the raw-target
+backtest gives 1.20% against both models' 1.59%. What holds on every fold is the verdict.)*
 
 ### Two results that did change
 
@@ -678,6 +687,22 @@ real possible outcome and would be reported as one; it was. §10's conclusion wa
 the leaky feature set and should be withdrawn — the honest statement is that head count makes
 no consistent difference to VaR calibration, which is what the model-independence of the whole
 calibration result would predict anyway.
+
+### Registry: the corrected model replaces the leaky one
+
+The leakage-free fold5 model was retrained through the tracked package pipeline and came out
+**bit-identical** to the run above — all 21 recorded metrics, including best val_loss
+0.1735555361956358 and calibration offset −0.02196028854997308. It is registered as
+`mtl-var-transformer` **version 2**, tagged `feature_set=leakage_free`,
+`leakage_status=corrected`, `supersedes_version=1` and `git_commit=db12f1e`, and `@production`
+points at it. The serving layer now refuses to load any version whose feature set is not
+leakage-free, and serves an honest one-step-ahead forecast: bars through day D in, a forecast for
+the next trading day out.
+
+Version 1 — the original fold5 model, trained on the leaky features — was **retired because it is
+superseded**, so it cannot be served by accident. It was not erased. Its training run and logged
+model remain in the tracking store and still load; the registered model's own description records
+the retirement and why; and this section and the git history keep the finding.
 
 ## What to do next
 

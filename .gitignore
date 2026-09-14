@@ -12,3 +12,4 @@ dist/
 mlruns/
 mlartifacts/
 *.log
+monitoring/

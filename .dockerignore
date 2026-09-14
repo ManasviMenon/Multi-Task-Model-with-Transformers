@@ -28,5 +28,7 @@ best_trans_weights.weights.h5
 # Logs and local run output.
 *.log
 mlartifacts/
+# Local prediction/outcome logs from serving and the drift demo - runtime state, not image content.
+monitoring/
 
 # mlruns/ is deliberately NOT ignored - the Dockerfile copies it in as the model registry.
