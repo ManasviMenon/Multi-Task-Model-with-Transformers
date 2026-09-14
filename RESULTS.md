@@ -139,6 +139,10 @@ buggy version's 12.75%).
 
 ## 4. Does rolling recalibration fix it? Now 4 of 5, up from 3 of 5
 
+> **Re-verified on the leakage-free model — see §13.** Same verdicts: GFC fails, the other four pass
+> (EU crisis 4.27%, p=0.504; 2015 selloff 4.26%, p=0.497; COVID 7.17%, p=0.137; 2022 3.28%, p=0.353).
+> The numbers below are the original model's.
+
 Same 5 folds, offset refit on a trailing 125-day window, refreshed every 21 days instead of
 frozen once.
 
@@ -156,6 +160,10 @@ anchor on) has nothing to do with model quality — it's structural. Rolling rec
 rescues 4 of 5 folds (EU crisis, 2015, COVID, 2022 all pass; only GFC remains fixed-by-nothing).
 
 ## 5. Volatility-ratio monitor: a shock detector, not a drift detector — pattern holds under correction
+
+> **Re-verified on the leakage-free model — see §13.** The pattern holds. Breach rates on elevated vs
+> normal readings are 7.0% vs 5.4% (GFC) and 6.8% vs 5.4% (COVID), and invert to 3.2% vs 7.2% (EU
+> crisis) and 3.3% vs 5.9% (2015 selloff). The numbers below are the original model's.
 
 Signal: ratio of live 10-day realized volatility to the volatility of the 125-day window
 backing the currently active offset.
@@ -227,6 +235,12 @@ regime itself (no calm data in the window, established in the original §4 mecha
 artifact of any of the four things that have now been ruled out.
 
 ## 8. Window length: still the strongest lever, but the regression got worse under the corrected model
+
+> **Partly withdrawn — see §13.** On the leakage-free model L=40 still rescues GFC (4.78%, p=0.873), still
+> regresses COVID (9.56%, p=0.003), and no window length passes every fold. But 2015 selloff passes at
+> every L (6.91%, p=0.106 at L=40; 3.19%, p=0.086 at L=175). Its failures at both ends below were
+> marginal (p=0.042, p=0.046) and an artifact of the leaky features. The claim that L=40 regresses two
+> folds is withdrawn: it regresses one.
 
 Pre-registered: **rescue = fold1_gfc flips to p ≥ 0.05; regression = any of {2011 EU crisis,
 2015 selloff, 2020 COVID} — passing at L=125 — drops below p = 0.05.** Swept `L` ∈
@@ -688,6 +702,52 @@ the leaky feature set and should be withdrawn — the honest statement is that h
 no consistent difference to VaR calibration, which is what the model-independence of the whole
 calibration result would predict anyway.
 
+### The recalibration experiments, re-run on the leakage-free model
+
+Rolling recalibration (§4), the volatility-ratio monitor (§5) and the window-length sweep (§8) were
+computed on the original model's predictions, so they inherited the leak. They were re-run twice.
+
+**First on the raw VaR₅ target, with no model** (`scripts/model_free_recalibration.py`). That answers
+whether a model is needed to reach the conclusions, but it is not an ex-ante backtest. The target is an
+EWMA of returns *through day t* minus a volatility term that includes day t, so the value tested against
+r_t carries roughly 18% of r_t itself. Two of its three pre-registered checks passed; the monitor check
+failed on GFC (5.7% on elevated readings vs 6.1% on normal ones).
+
+**Then on the leakage-free model** (`scripts/recalibration_leakage_free.py`), the ex-ante version: every
+forecast of day t uses only information through day t−1. Its predictions come from
+`mtl-var walk-forward --feature-set leakage_free`, gated on being bit-identical to the leakage-free runs
+above — they were, 14 values on each of the 5 folds. The same three criteria were applied unchanged. They
+were written before any leakage-free recalibration number existed, though after the raw-target results
+had been seen.
+
+| Pre-registered check, on the leakage-free model | Result |
+|---|---|
+| 1. Rolling recalibration: GFC fails, the other four pass | **pass** |
+| 2. L=40 rescues GFC and regresses a fold that passes at L=125 | **pass** — rescues GFC (4.78%, p=0.873), regresses COVID (9.56%, p=0.003); no window length passes every fold |
+| 3. Monitor: elevated above normal in both shock folds, below in both grind folds | **pass** — GFC 7.0% vs 5.4%, COVID 6.8% vs 5.4%; EU crisis 3.2% vs 7.2%, 2015 selloff 3.3% vs 5.9% |
+
+Window sweep on the leakage-free model (calibrated coverage, Kupiec p):
+
+| Fold | L=40 | L=60 | L=90 | L=125 | L=175 |
+|---|---|---|---|---|---|
+| 2008 GFC | **4.78%, 0.873** | 2.39%, 0.036 | 1.99%, 0.013 | 0.80%, 0.00016 | 0.00%, n/a |
+| 2011 EU crisis | 5.60%, 0.601 | 4.53%, 0.674 | 4.53%, 0.674 | 4.27%, 0.504 | 4.53%, 0.674 |
+| 2015 selloff | 6.91%, 0.106 | 6.12%, 0.336 | 5.05%, 0.962 | 4.26%, 0.497 | 3.19%, 0.086 |
+| 2020 COVID | 9.56%, 0.003 | 9.56%, 0.003 | 7.17%, 0.137 | 7.17%, 0.137 | 7.17%, 0.137 |
+| 2022 bear | 4.03%, 0.609 | 4.84%, 0.934 | 4.03%, 0.609 | 3.28%, 0.353 | 2.78%, 0.347 |
+
+Cell by cell, these verdicts agree with the original model in 22 of 25 cells and with the raw target in
+24 of 25.
+
+**What this changes.** The three conclusions stand on ex-ante predictions: rolling recalibration rescues
+four folds but not GFC; a short window rescues GFC at the cost of COVID, and no static window passes every
+fold; the monitor leads acute shocks and inverts on slow grinds. One detail is withdrawn: §8 reported that
+2015 selloff fails at both ends of the sweep, and those failures were marginal (p=0.042, p=0.046) and do
+not survive either the leakage-free model or the raw target. Two smaller differences are recorded rather
+than smoothed over. COVID passes at L=90 on the leakage-free model where the original model failed. And the
+raw target does not reproduce GFC's monitor pattern — which, since that target is not ex-ante, says more
+about the raw target than about the monitor.
+
 ### Registry: the corrected model replaces the leaky one
 
 The leakage-free fold5 model was retrained through the tracked package pipeline and came out
@@ -798,6 +858,10 @@ results/                    every JSON result + cached prediction, corrected and
 - `leakage_free_ablation.py` — leakage-free single split and the §10 single-task ablation
 - `leakage_free_report.py` — assembles the corrected accuracy table, checks the return head
   against naive baselines, and re-verifies verdicts against the model-free backtest
+- `model_free_recalibration.py` — rolling recalibration, the monitor and the window sweep on the raw VaR
+  target with no model (§13); a model-need check, not an ex-ante backtest
+- `recalibration_leakage_free.py` — the same three analyses on the leakage-free model's predictions, gated
+  on bit-identical parity with §13
 - `verify_seed_sensitivity.py` — single-split seed-fragility check (§11 step 1); contains the
   `train_once_no_reseed` pattern to reuse for any future custom-seed training — do NOT reuse
   `verify_loss_bug_impact.train_once`, which re-seeds internally to a hardcoded 42
@@ -814,6 +878,8 @@ results/                    every JSON result + cached prediction, corrected and
   raw and calibrated variants)
 - `leakage_audit_results.json`, `leakage_free_retrain_results.json`,
   `leakage_free_ablation_results.json`, `leakage_free_summary.json` — §13 raw results
+- `model_free_recalibration_results.json`, `recalibration_leakage_free_results.json`,
+  `walk_forward_results_leakage_free.json`, `predictions_leakage_free/` — the §13 recalibration re-runs
 
 **`results/` — buggy-loss backups, preserved for the before/after record:**
 - `walk_forward_results_buggy_loss.json` — full buggy-trained campaign (fixed-offset, rolling,
