@@ -54,15 +54,24 @@ WORKDIR /app
 
 COPY --from=builder /opt/venv /opt/venv
 
-# The model itself. mlruns/ is the local registry (SQLite + artifacts, ~4MB), so the image is
-# self-contained and `docker run` serves immediately. Mount over /app/mlruns to serve a
-# different registry without rebuilding.
-COPY mlruns/ /app/mlruns/
+# The model registry is optional at build time. A local build bakes in mlruns/ - the model - so
+# the image is self-contained and `docker run` serves @production immediately. A clean checkout,
+# such as CI, has no mlruns/ because it is gitignored; that builds an image which starts without a
+# model and reports "degraded" on /health until a registry is mounted at /app/mlruns.
+# pyproject.toml is listed only so the COPY always has a source - the mlruns* glob may match nothing.
+COPY pyproject.toml mlruns* /tmp/registry/
 
-# MLflow resolves artifact locations to absolute paths when an experiment is created, so the
-# copied store still points at the host's directories and every lookup fails with
-# "No such artifact: ''". Rewrite them to the container's root.
-RUN python -m mtl_var.cli rebase-registry --db /app/mlruns/mlflow.db --to /app/mlruns
+# MLflow resolves artifact locations to absolute paths when an experiment is created, so a copied
+# store still points at the host's directories and every lookup fails with "No such artifact: ''".
+# Rewrite them to the container's root.
+RUN rm /tmp/registry/pyproject.toml \
+    && if [ -f /tmp/registry/mlflow.db ]; then \
+         mkdir -p /app/mlruns && cp -a /tmp/registry/. /app/mlruns/ \
+         && python -m mtl_var.cli rebase-registry --db /app/mlruns/mlflow.db --to /app/mlruns; \
+       else \
+         echo "no mlruns/ in the build context - this image will start without a registered model"; \
+       fi \
+    && rm -rf /tmp/registry
 
 # Serving refits the fold's scalers from this csv at startup and checks its SHA-256 against
 # the hash recorded on the registered model version, so it is required, not optional.

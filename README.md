@@ -1,10 +1,32 @@
 # mtl-var
 
+[![CI](https://github.com/ManasviMenon/Multi-Task-Model-with-Transformers/actions/workflows/ci.yml/badge.svg)](https://github.com/ManasviMenon/Multi-Task-Model-with-Transformers/actions/workflows/ci.yml)
+
 Post-hoc calibration of a parametric Value-at-Risk estimator under regime shift, operationalised as a
 tracked, registered, served and monitored model. Research write-up: [`RESULTS.md`](RESULTS.md).
 
-> This README is being built phase by phase. The monitoring section below is complete; the portfolio
+> This README is being built phase by phase. The CI and monitoring sections are complete; the portfolio
 > front page, architecture diagram and quickstart are still to come.
+
+## Continuous integration
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request, as two parallel
+jobs:
+
+- **Lint and test** — installs the package with its pinned dependencies, runs `ruff`, then the full `pytest`
+  suite.
+- **Build image** — builds the Docker image, starts it, and checks that `/health` responds.
+
+This is integration, not deployment: nothing is pushed to an image registry or a host.
+
+A clean checkout has no `mlruns/` — the local model registry is gitignored — so two things behave
+differently in CI than on a machine with a registered model, both by design:
+
+- The serving tests that need a trained model **skip**, with the reason printed. Everything else still runs,
+  including request validation, the leakage-free feature invariants, the forecast-row invariance, the
+  registry's lineage and retirement logic, and the monitoring suite.
+- The image builds **without a model** and starts in a `degraded` state, which the smoke test accepts. A
+  local build bakes the registry in and serves `@production` immediately.
 
 ## Monitoring, and how a drift alert would trigger retraining
 
