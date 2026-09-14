@@ -6,7 +6,7 @@ the project's established convention of running everything from the repo root.
 import argparse
 
 from . import __version__
-from .data import DEFAULT_CSV
+from .data import DEFAULT_CSV, FEATURE_SETS
 
 
 def main(argv=None):
@@ -16,6 +16,9 @@ def main(argv=None):
 
     wf = sub.add_parser("walk-forward", help="run the 5-fold regime-conditioned walk-forward campaign")
     wf.add_argument("--csv", default=DEFAULT_CSV, help=f"path to the OHLCV csv (default: {DEFAULT_CSV})")
+    wf.add_argument("--feature-set", choices=sorted(FEATURE_SETS), default="original",
+                    help="original reproduces the recorded results but contains target leakage "
+                         "(RESULTS.md section 13); leakage_free lags every day-t feature one day")
 
     bf = sub.add_parser("backfill-mlflow",
                         help="create MLflow runs from already-recorded results (no retraining)")
@@ -25,15 +28,23 @@ def main(argv=None):
 
     reg = sub.add_parser("register-model", help="register a logged model as a new registry version")
     reg.add_argument("--model-uri", default=None,
-                     help="models:/<id> to register (default: newest live model for --fold)")
+                     help="models:/<id> to register (default: newest live model for --fold and --feature-set)")
     reg.add_argument("--fold", default="fold5_2022_bear", help="fold the model was trained on")
     reg.add_argument("--seed", type=int, default=42, help="seed the model was trained with")
     reg.add_argument("--csv", default=DEFAULT_CSV, help="training data, hashed into the lineage tags")
+    reg.add_argument("--feature-set", choices=sorted(FEATURE_SETS), default="leakage_free",
+                     help="feature set the model was trained on (default: leakage_free, the only servable set)")
+    reg.add_argument("--supersedes", default=None, help="registry version this one replaces")
     reg.add_argument("--alias", default=None, help="alias to point at this version, e.g. production")
 
     promote = sub.add_parser("promote-model", help="point an alias at an existing registry version")
     promote.add_argument("version", help="registry version number")
     promote.add_argument("--alias", default="production", help="alias to set (default: production)")
+
+    retire = sub.add_parser("retire-model",
+                            help="delete a superseded version from the registry, keeping its run and artifact")
+    retire.add_argument("version", help="registry version number")
+    retire.add_argument("--reason", required=True, help="why it was retired - recorded in the registry")
 
     sub.add_parser("registry-info", help="list registry versions with their aliases and lineage")
 
@@ -52,7 +63,7 @@ def main(argv=None):
 
     if args.command == "walk-forward":
         from .pipeline import main as run_walk_forward
-        run_walk_forward(csv_path=args.csv)
+        run_walk_forward(csv_path=args.csv, feature_set=args.feature_set)
         return 0
 
     if args.command == "backfill-mlflow":
@@ -71,20 +82,27 @@ def main(argv=None):
 
         model_uri, run = args.model_uri, None
         if model_uri is None:
-            model_uri, run = registry.find_logged_model(fold=args.fold)
+            model_uri, run = registry.find_logged_model(fold=args.fold, feature_set=args.feature_set)
             if model_uri is None:
-                parser.error(f"no live logged model found for fold {args.fold} - pass --model-uri")
+                parser.error(f"no live logged model found for fold {args.fold} with feature set "
+                             f"{args.feature_set} - pass --model-uri")
             print(f"found logged model {model_uri} from run {run.info.run_name}")
 
         metrics = dict(run.data.metrics) if run is not None else {}
         registry.register(model_uri, fold=args.fold, seed=args.seed, csv_path=args.csv,
                           metrics=metrics, alias=args.alias,
-                          run_id=run.info.run_id if run is not None else None)
+                          run_id=run.info.run_id if run is not None else None,
+                          feature_set=args.feature_set, supersedes=args.supersedes)
         return 0
 
     if args.command == "promote-model":
         from . import registry
         registry.set_alias(args.version, args.alias)
+        return 0
+
+    if args.command == "retire-model":
+        from . import registry
+        registry.retire(args.version, args.reason)
         return 0
 
     if args.command == "rebase-registry":

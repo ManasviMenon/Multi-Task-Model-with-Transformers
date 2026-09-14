@@ -15,8 +15,12 @@ selloff, 2019-20 COVID crash, 2022 rate-hike bear market):
   fold 4: train 2004-2018        test 2019-2020
   fold 5: train 2004-2021        test 2022
 
-Results are written to results/walk_forward_results.json after every fold, so a crash partway
-through doesn't lose completed folds.
+Two feature sets (data.FEATURE_SETS). "original" is the default and reproduces every recorded
+result; it contains target leakage (RESULTS.md section 13). "leakage_free" lags every day-t
+feature by one day. Each set writes its own results file and prediction cache, so a
+leakage-free run can never overwrite the recorded ones.
+
+Results are written after every fold, so a crash partway through doesn't lose completed folds.
 """
 import gc
 import json
@@ -30,7 +34,16 @@ from sklearn.preprocessing import StandardScaler
 
 from . import tracking
 from .calibration import fixed_offset_calibration, rolling_calibration_analysis
-from .data import DEFAULT_CSV, FEATURES, SEQUENCE_LENGTH, TARGETS, load_and_engineer_features, make_sequences
+from .data import (
+    DEFAULT_CSV,
+    FEATURE_SETS,
+    FEATURES,
+    SEQUENCE_LENGTH,
+    TARGETS,
+    frame_for_feature_set,
+    load_and_engineer_features,
+    make_sequences,
+)
 from .model import WEIGHTS, train_model
 from .seeding import SEED, set_seeds
 
@@ -46,7 +59,16 @@ FOLDS = [
 ]
 
 
-def build_fold_data(fold_cfg, data):
+def results_path(feature_set="original"):
+    """Original keeps its historical path; every other feature set gets its own file."""
+    return RESULTS_PATH if feature_set == "original" else f"results/walk_forward_results_{feature_set}.json"
+
+
+def predictions_dir(feature_set="original"):
+    return PREDICTIONS_DIR if feature_set == "original" else f"results/predictions_{feature_set}"
+
+
+def build_fold_data(fold_cfg, data, feature_names=FEATURES):
     """Per-fold split, feature scaling, sequencing, and target standardisation - scalers fit
     on that fold's train rows only."""
     dates = data['observation_date']
@@ -57,8 +79,8 @@ def build_fold_data(fold_cfg, data):
     test_df = data.loc[test_mask].reset_index(drop=True)
 
     feat_scaler = StandardScaler()
-    X_train_scaled = feat_scaler.fit_transform(train_df[FEATURES])
-    X_test_scaled = feat_scaler.transform(test_df[FEATURES])
+    X_train_scaled = feat_scaler.fit_transform(train_df[feature_names])
+    X_test_scaled = feat_scaler.transform(test_df[feature_names])
 
     X_train = make_sequences(X_train_scaled, SEQUENCE_LENGTH)
     X_test = make_sequences(X_test_scaled, SEQUENCE_LENGTH)
@@ -80,43 +102,53 @@ def build_fold_data(fold_cfg, data):
         "y_train_z": y_train_z, "y_test_z": y_test_z,
         "y_train_raw": y_train_raw, "y_test_raw": y_test_raw,
         "target_scalers": target_scalers,
+        "feat_scaler": feat_scaler,
     }
 
 
-def run_fold(fold_cfg, data, seed=SEED):
+def run_fold(fold_cfg, data, seed=SEED, feature_set="original"):
     """Train and evaluate one fold. Emits one MLflow run per (fold, seed) when tracking is on.
 
     Tracking calls are deliberately kept off the seeding/training boundary: params go in after
     the (RNG-free) data prep, metrics and the model artifact only after training has finished.
     Verified inert - fold5 reproduces its recorded metrics bit-for-bit with tracking enabled.
     """
+    if feature_set not in FEATURE_SETS:
+        raise ValueError(f"unknown feature set {feature_set!r}; expected one of {sorted(FEATURE_SETS)}")
+
+    run_name = f"{fold_cfg['name']}_seed{seed}" + ("" if feature_set == "original" else f"_{feature_set}")
     with tracking.start_run(
-        run_name=f"{fold_cfg['name']}_seed{seed}",
-        tags={"fold": fold_cfg["name"], "seed": seed, "stage": "walk-forward"},
+        run_name=run_name,
+        tags={"fold": fold_cfg["name"], "seed": seed, "stage": "walk-forward", "feature_set": feature_set},
     ):
-        return _run_fold_impl(fold_cfg, data, seed)
+        return _run_fold_impl(fold_cfg, data, seed, feature_set)
 
 
-def _run_fold_impl(fold_cfg, data, seed):
+def _run_fold_impl(fold_cfg, data, seed, feature_set="original"):
+    feature_names = FEATURE_SETS[feature_set]
+    data = frame_for_feature_set(data, feature_set)
+
+    label = "" if feature_set == "original" else f"  [{feature_set}]"
     print(f"\n===== {fold_cfg['name']}  train[{fold_cfg['train_start']}:{fold_cfg['train_end']}]  "
-          f"test[{fold_cfg['test_start']}:{fold_cfg['test_end']}] =====", flush=True)
+          f"test[{fold_cfg['test_start']}:{fold_cfg['test_end']}]{label} =====", flush=True)
 
     tf.keras.backend.clear_session()
     gc.collect()
     set_seeds(seed)
 
-    fd = build_fold_data(fold_cfg, data)
+    fd = build_fold_data(fold_cfg, data, feature_names)
     X_train, X_test = fd["X_train"], fd["X_test"]
     y_train_z, y_test_z = fd["y_train_z"], fd["y_test_z"]
     y_test_raw, target_scalers = fd["y_test_raw"], fd["target_scalers"]
     test_df = fd["test_df"]
 
-    print(f"n_train={len(X_train)}  n_test={len(X_test)}  n_features={len(FEATURES)}", flush=True)
+    n_features = len(feature_names)
+    print(f"n_train={len(X_train)}  n_test={len(X_test)}  n_features={n_features}", flush=True)
 
-    n_features = len(FEATURES)
     tracking.log_params(tracking.fold_params(
         fold_cfg, seed, len(X_train), len(X_test), n_features, SEQUENCE_LENGTH, TARGETS, WEIGHTS,
     ))
+    tracking.log_params({"feature_set": feature_set})
     model, epochs_run, best_val_loss = train_model(X_train, y_train_z, X_test, y_test_z, n_features)
     print(f"trained {epochs_run} epochs, best val_loss={best_val_loss:.6f}", flush=True)
 
@@ -148,9 +180,10 @@ def _run_fold_impl(fold_cfg, data, seed):
 
     test_dates = test_df['observation_date'].values[SEQUENCE_LENGTH - 1:]
 
-    os.makedirs(PREDICTIONS_DIR, exist_ok=True)
+    pred_dir = predictions_dir(feature_set)
+    os.makedirs(pred_dir, exist_ok=True)
     np.savez(
-        os.path.join(PREDICTIONS_DIR, f"{fold_cfg['name']}.npz"),
+        os.path.join(pred_dir, f"{fold_cfg['name']}.npz"),
         dates=test_dates.astype("datetime64[D]").astype(str),
         returns=returns,
         var_pred=var_pred,
@@ -178,6 +211,7 @@ def _run_fold_impl(fold_cfg, data, seed):
 
     result = {
         "fold": fold_cfg["name"],
+        "feature_set": feature_set,
         "train_start": fold_cfg["train_start"],
         "train_end": fold_cfg["train_end"],
         "test_start": fold_cfg["test_start"],
@@ -204,15 +238,16 @@ def _run_fold_impl(fold_cfg, data, seed):
     return result
 
 
-def main(csv_path=DEFAULT_CSV):
-    print("Loading data and engineering features...", flush=True)
+def main(csv_path=DEFAULT_CSV, feature_set="original"):
+    print(f"Loading data and engineering features (feature set: {feature_set})...", flush=True)
     data = load_and_engineer_features(csv_path)
     print(f"{len(data)} usable rows, {data['observation_date'].min().date()} to "
           f"{data['observation_date'].max().date()}", flush=True)
 
+    path = results_path(feature_set)
     results = []
-    if os.path.exists(RESULTS_PATH):
-        with open(RESULTS_PATH) as f:
+    if os.path.exists(path):
+        with open(path) as f:
             results = json.load(f)
         done = {r["fold"] for r in results}
         print(f"Resuming: {len(results)} fold(s) already completed: {sorted(done)}", flush=True)
@@ -223,14 +258,15 @@ def main(csv_path=DEFAULT_CSV):
         if fold_cfg["name"] in done:
             continue
         try:
-            result = run_fold(fold_cfg, data)
+            result = run_fold(fold_cfg, data, feature_set=feature_set)
             results.append(result)
         except Exception as e:
             print(f"FOLD {fold_cfg['name']} FAILED: {e}", flush=True)
             traceback.print_exc()
             results.append({"fold": fold_cfg["name"], "error": str(e)})
 
-        with open(RESULTS_PATH, "w") as f:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
             json.dump(results, f, indent=2)
 
     print("\n===== walk-forward complete =====", flush=True)

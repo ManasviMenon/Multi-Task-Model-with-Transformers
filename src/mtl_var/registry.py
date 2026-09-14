@@ -45,13 +45,13 @@ def data_fingerprint(csv_path):
     return {"data_file": os.path.basename(csv_path), "data_sha256": h.hexdigest()[:16], "data_bytes": size}
 
 
-def default_description(fold, seed, metrics):
-    """Short lineage blurb, including the caveat a deployer needs to see.
+def default_description(fold, seed, metrics, feature_set="original", supersedes=None):
+    """Short lineage blurb, including the caveats a deployer needs to see.
 
-    The honest limitation goes in the description on purpose: this model's VaR calibration
-    passes its own fold and does not generalise across regimes (4 of 5 folds fail, robustly
-    across 10 seeds). Anyone loading this from the registry should know that before trusting
-    the VaR head.
+    The honest limitations go in the description on purpose. The VaR calibration passes its own
+    fold and does not generalise across regimes (4 of 5 folds fail, robustly across 10 seeds),
+    and the feature set decides whether the return head means anything at all. Anyone loading
+    this from the registry should know both before trusting the output.
     """
     cov = metrics.get("var_cal_coverage")
     kp = metrics.get("var_cal_kupiec_p")
@@ -59,9 +59,18 @@ def default_description(fold, seed, metrics):
     if cov is not None and kp is not None:
         perf = f" Calibrated VaR coverage {cov * 100:.2f}% (Kupiec p={kp:.4f}) on its own test window."
 
+    if feature_set == "leakage_free":
+        features = (" Features: leakage-free - every day-t feature lagged one day, so this is a genuine "
+                    "one-step-ahead forecast (RESULTS.md 13). The return head has no forecasting skill: "
+                    "it loses to a constant zero forecast on all 5 walk-forward folds.")
+    else:
+        features = (" Features: ORIGINAL set, which contains target leakage - log_close_ret is identical "
+                    "to the log_return target (RESULTS.md 13). Not servable.")
+    lineage = f" Supersedes version {supersedes}." if supersedes else ""
+
     return (
         f"Multi-task SPX transformer (5 heads: log_return, log_volume, yz_vol, VaR_5, CVaR_5). "
-        f"Trained by mtl_var.pipeline.run_fold on {fold}, seed={seed}.{perf} "
+        f"Trained by mtl_var.pipeline.run_fold on {fold}, seed={seed}.{perf}{features}{lineage} "
         f"CAVEAT: the post-hoc VaR calibration does not generalise across regimes - 4 of 5 "
         f"walk-forward folds fail Kupiec, robustly across 10 seeds each (RESULTS.md 3, 11). "
         f"Treat the VaR head as calibrated only for conditions resembling its own test window."
@@ -69,8 +78,13 @@ def default_description(fold, seed, metrics):
 
 
 def register(model_uri, fold, seed, csv_path="SPX500-18Y_scaled_y.csv", metrics=None,
-             description=None, name=REGISTERED_MODEL_NAME, alias=None, run_id=None):
-    """Register a logged model as a new version, with lineage tags and a description."""
+             description=None, name=REGISTERED_MODEL_NAME, alias=None, run_id=None,
+             feature_set="original", supersedes=None):
+    """Register a logged model as a new version, with lineage tags and a description.
+
+    `feature_set` is part of the model's contract, not documentation: serving reads it to decide
+    which features to build, and refuses a version trained on the leaky original set.
+    """
     if not tracking.tracking_enabled():
         print("tracking disabled - cannot register")
         return None
@@ -96,8 +110,15 @@ def register(model_uri, fold, seed, csv_path="SPX500-18Y_scaled_y.csv", metrics=
         "source": "mtl_var.pipeline.run_fold",
         "git_commit": tracking.git_commit() or "unknown",
         "mlflow_model_uri": model_uri,
+        "feature_set": feature_set,
+        # Machine-readable, so "is this the corrected model?" is answerable from the registry
+        # alone rather than by knowing which version number happened to come after the audit.
+        "leakage_status": "corrected" if feature_set == "leakage_free" else "contains_target_leakage",
+        "leakage_audit": "RESULTS.md section 13",
         **data_fingerprint(csv_path),
     }
+    if supersedes:
+        tags["supersedes_version"] = str(supersedes)
     # var_offset is load-bearing for serving, not just documentation: it is the post-hoc
     # calibration constant added to the raw VaR head, so the model alone is not servable
     # without it.
@@ -110,8 +131,9 @@ def register(model_uri, fold, seed, csv_path="SPX500-18Y_scaled_y.csv", metrics=
     for k, v in tags.items():
         client.set_model_version_tag(name, version.version, k, v)
 
-    client.update_model_version(name, version.version,
-                                description=description or default_description(fold, seed, metrics))
+    client.update_model_version(
+        name, version.version,
+        description=description or default_description(fold, seed, metrics, feature_set, supersedes))
 
     if alias:
         set_alias(version.version, alias, name=name)
@@ -172,6 +194,8 @@ def describe(name=REGISTERED_MODEL_NAME):
             "version": v.version,
             "aliases": sorted(alias_map.get(str(v.version), [])),
             "fold": v.tags.get("fold"),
+            "feature_set": v.tags.get("feature_set", "original"),
+            "leakage_status": v.tags.get("leakage_status", "contains_target_leakage"),
             "seed": v.tags.get("seed"),
             "git_commit": v.tags.get("git_commit"),
             "data_file": v.tags.get("data_file"),
@@ -185,6 +209,7 @@ def describe(name=REGISTERED_MODEL_NAME):
         alias_str = ", ".join(f"@{a}" for a in row["aliases"]) or "(no alias)"
         print(f"\nversion {row['version']}  {alias_str}")
         print(f"  trained on : {row['fold']}  seed={row['seed']}")
+        print(f"  features   : {row['feature_set']}  ({row['leakage_status']})")
         print(f"  commit     : {row['git_commit']}")
         print(f"  data       : {row['data_file']}  sha256={row['data_sha256']}")
         print(f"  VaR cal    : coverage={row['var_cal_coverage']}  kupiec_p={row['var_cal_kupiec_p']}")
@@ -249,8 +274,12 @@ def rebase_artifact_paths(db_path, new_root, dry_run=False):
     return changed
 
 
-def find_logged_model(fold="fold5_2022_bear", provenance="live", experiment=tracking.DEFAULT_EXPERIMENT):
-    """Most recent logged model whose source run matches this fold and provenance."""
+def find_logged_model(fold="fold5_2022_bear", provenance="live", experiment=tracking.DEFAULT_EXPERIMENT,
+                      feature_set="leakage_free"):
+    """Most recent logged model whose source run matches this fold, provenance and feature set.
+
+    Runs from before feature sets existed carry no feature_set tag and count as "original".
+    """
     import mlflow
 
     tracking.configure(experiment)
@@ -264,9 +293,48 @@ def find_logged_model(fold="fold5_2022_bear", provenance="live", experiment=trac
         filter_string=f"tags.fold = '{fold}' and tags.provenance = '{provenance}'",
         order_by=["attributes.start_time DESC"],
     )
+    runs = [r for r in runs if (r.data.tags.get("feature_set") or "original") == feature_set]
     for run in runs:
         models = client.search_logged_models([exp.experiment_id])
         for m in models:
             if m.source_run_id == run.info.run_id:
                 return f"models:/{m.model_id}", run
     return None, None
+
+
+def retire(version, reason, name=REGISTERED_MODEL_NAME, protected_aliases=(PRODUCTION_ALIAS,)):
+    """Delete a superseded version from the registry while keeping the evidence that it existed.
+
+    Deleting a registry version only removes it from what can be loaded by name or alias. The
+    run that trained it and its logged model stay in the tracking store, so it can still be
+    inspected or re-registered. Before deleting, the retirement - which version, its run and
+    source, and why - is appended to the registered model's own description, so the registry
+    carries the record itself rather than relying on anyone remembering it.
+
+    Refuses to retire a version a protected alias still points at: retiring the version in
+    production would take serving down. Promote the replacement first.
+    """
+    import datetime
+
+    client = _client()
+    mv = client.get_model_version(name, str(version))
+    alias_map = client.get_registered_model(name).aliases or {}
+    pointing = sorted(a for a, v in alias_map.items() if str(v) == str(version))
+
+    blocked = [a for a in pointing if a in protected_aliases]
+    if blocked:
+        raise RuntimeError(f"version {version} is still @{', @'.join(blocked)} - promote a replacement first")
+
+    for alias in pointing:
+        client.delete_registered_model_alias(name, alias)
+
+    note = (f"\n\nRetired version {version} on {datetime.date.today().isoformat()}: {reason} "
+            f"Its run ({mv.run_id}) and logged model ({mv.source}) are retained in the tracking store.")
+    current = client.get_registered_model(name).description or ""
+    client.update_registered_model(name, description=current + note)
+    client.delete_model_version(name, str(version))
+
+    print(f"retired {name} version {version} (aliases removed: {pointing or 'none'}); "
+          f"source {mv.source} retained")
+    return {"version": str(version), "source": mv.source, "run_id": mv.run_id,
+            "aliases_removed": pointing, "reason": reason}

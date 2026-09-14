@@ -70,10 +70,16 @@ def tracking_enabled():
 
 
 def git_commit():
-    """Short commit hash for run lineage, or None outside a git checkout."""
+    """Short commit hash for run lineage, or None outside a git checkout.
+
+    Resolved from this package's own directory, not the caller's working directory. Runs are
+    often launched from a scratch directory so they don't write into results/, and resolving
+    from the cwd silently recorded no commit for those runs.
+    """
     try:
         out = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
-                             capture_output=True, text=True, timeout=10)
+                             capture_output=True, text=True, timeout=10,
+                             cwd=os.path.dirname(os.path.abspath(__file__)))
         return out.stdout.strip() or None
     except Exception:
         return None

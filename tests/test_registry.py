@@ -178,6 +178,56 @@ def test_rebase_is_idempotent(tmp_path):
     assert registry.rebase_artifact_paths(db, "/app/mlruns") == 0  # nothing left to change
 
 
+def test_register_records_feature_set_and_leakage_status(tiny_model_uri):
+    v1 = registry.register(tiny_model_uri, fold="fold5_2022_bear", seed=42, csv_path="x.csv")
+    v2 = registry.register(tiny_model_uri, fold="fold5_2022_bear", seed=42, csv_path="x.csv",
+                           feature_set="leakage_free", supersedes=v1.version)
+
+    client = registry._client()
+    t1 = client.get_model_version(registry.REGISTERED_MODEL_NAME, str(v1.version)).tags
+    mv2 = client.get_model_version(registry.REGISTERED_MODEL_NAME, str(v2.version))
+
+    assert t1["feature_set"] == "original"
+    assert t1["leakage_status"] == "contains_target_leakage"
+    assert mv2.tags["feature_set"] == "leakage_free"
+    assert mv2.tags["leakage_status"] == "corrected"
+    assert mv2.tags["supersedes_version"] == str(v1.version)
+    assert "leakage-free" in mv2.description
+    assert f"Supersedes version {v1.version}" in mv2.description
+
+
+def test_retire_deletes_the_version_but_keeps_the_evidence(tiny_model_uri):
+    import mlflow
+
+    v1 = registry.register(tiny_model_uri, fold="f", seed=42, csv_path="x.csv", alias="staging")
+    v2 = registry.register(tiny_model_uri, fold="f", seed=42, csv_path="x.csv",
+                           feature_set="leakage_free", supersedes=v1.version, alias="production")
+
+    record = registry.retire(v1.version, "Superseded by version 2; trained on leaky features.")
+
+    client = registry._client()
+    remaining = sorted(int(v.version) for v in
+                       client.search_model_versions(f"name='{registry.REGISTERED_MODEL_NAME}'"))
+    assert remaining == [int(v2.version)]
+    assert record["aliases_removed"] == ["staging"]
+    assert registry.get_version("staging") is None
+    assert int(registry.get_version("production").version) == int(v2.version)
+
+    description = client.get_registered_model(registry.REGISTERED_MODEL_NAME).description
+    assert "Retired version 1" in description
+    assert "Superseded by version 2" in description
+
+    # The difference between retiring and erasing: the source model still loads.
+    assert mlflow.tensorflow.load_model(record["source"]) is not None
+
+
+def test_retire_refuses_the_version_in_production(tiny_model_uri):
+    v1 = registry.register(tiny_model_uri, fold="f", seed=42, csv_path="x.csv", alias="production")
+    with pytest.raises(RuntimeError, match="production"):
+        registry.retire(v1.version, "must not be allowed while it is serving")
+    assert registry.get_version("production") is not None
+
+
 def test_registry_is_noop_when_tracking_disabled(monkeypatch):
     monkeypatch.setenv("MTL_VAR_TRACKING", "0")
     assert registry.register("models:/whatever", fold="f", seed=1) is None

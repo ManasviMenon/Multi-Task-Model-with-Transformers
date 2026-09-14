@@ -19,6 +19,20 @@ FEATURES = [
 ]
 TARGETS = ['log_return', 'log_volume', 'yz_vol', 'VaR_5', 'CVaR_5']
 
+# Features that embed day-t information while the target is day t's own value (RESULTS.md
+# section 13). `log_close_ret` is bit-identical to the `log_return` target; the rest read day
+# t's open/high/low/close directly, or through a cummax or rolling-20 window that includes it.
+CONTAMINATED_FEATURES = ['log_open_ret', 'log_high_ret', 'log_low_ret', 'log_close_ret',
+                         'drawdown', 'ret_min20', 'ret_max20', 'ret_skew20']
+
+# The same 18 features with every contaminated one replaced by its one-day lag. Every value in
+# row t is then knowable before day t, so row t's targets are a genuine one-step-ahead forecast.
+LEAKAGE_FREE_FEATURES = [f"{f}_lag1" if f in CONTAMINATED_FEATURES else f for f in FEATURES]
+
+# "original" is kept because it is what every recorded result in RESULTS.md sections 0-12 was
+# produced with, and reproducing those is part of this project. It is not servable.
+FEATURE_SETS = {"original": FEATURES, "leakage_free": LEAKAGE_FREE_FEATURES}
+
 DEFAULT_CSV = "SPX500-18Y_scaled_y.csv"
 
 
@@ -90,6 +104,29 @@ def engineer_features(data):
     data.dropna(inplace=True)
 
     return data.reset_index(drop=True)
+
+
+def build_leakage_free_frame(data):
+    """Add the one-day lag of every contaminated feature, dropping the row that has no lag.
+
+    Byte-identical to `scripts/leakage_free_retrain.build_clean_frame`, which produced the
+    section 13 numbers; a test holds the two together so the served model's features cannot
+    drift from the ones it was evaluated on. `log_close_ret_lag1` equals `ret_lag1` exactly -
+    the duplicate is kept so this stays a one-for-one shift of the original feature set.
+    """
+    out = data.copy()
+    for f in CONTAMINATED_FEATURES:
+        out[f"{f}_lag1"] = out[f].shift(1)
+    return out.dropna().reset_index(drop=True)
+
+
+def frame_for_feature_set(data, feature_set):
+    """The engineered frame with whatever extra columns `feature_set` needs."""
+    if feature_set == "original":
+        return data
+    if feature_set == "leakage_free":
+        return build_leakage_free_frame(data)
+    raise ValueError(f"unknown feature set {feature_set!r}; expected one of {sorted(FEATURE_SETS)}")
 
 
 def make_sequences(X_scaled, seq_len):
