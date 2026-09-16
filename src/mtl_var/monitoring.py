@@ -1,10 +1,9 @@
 """Monitoring that runs alongside serving: performance drift, concept drift, latency, alerts.
 
 This is the layer the research actually argues for. The central finding is that a VaR
-calibration fitted on one window fails on the next - 4 of 5 regime-aligned folds fail Kupiec,
-a verdict unchanged
-across model variants - and no static configuration fixes it: refresh cadence, trigger
-threshold and calibration-window length were each tried and eliminated. If a static
+calibration fitted on one window fails on the next - 4 of 5 regime-aligned folds fail Kupiec, a
+verdict unchanged across model variants - and no static configuration fixes it: refresh cadence,
+trigger threshold and calibration-window length were each tried and eliminated. If a static
 calibration cannot be trusted to hold, the operational answer is to watch it and know when it
 has broken. That is what this module does.
 
