@@ -72,8 +72,9 @@ STATE = {}
 
 CAVEAT = ("Leakage-free one-step-ahead model (RESULTS.md 13). VaR calibration is fitted on this model's "
           "own fold and does not generalise across regimes: 4 of 5 walk-forward folds fail the Kupiec "
-          "test, robustly across 10 seeds. The return head has no forecasting skill - it loses to a "
-          "constant zero forecast on all 5 folds.")
+          "test. That fold-level verdict is unchanged across this model, the original-feature model and "
+          "a model-free backtest of the raw VaR target. The return head has no forecasting skill - it "
+          "loses to a constant zero forecast on all 5 folds.")
 
 
 class OHLCVBar(BaseModel):

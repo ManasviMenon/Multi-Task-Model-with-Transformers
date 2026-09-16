@@ -106,7 +106,7 @@ def build_fold_data(fold_cfg, data, feature_names=FEATURES):
     }
 
 
-def run_fold(fold_cfg, data, seed=SEED, feature_set="original"):
+def run_fold(fold_cfg, data, seed=SEED, feature_set="original", save_predictions=True):
     """Train and evaluate one fold. Emits one MLflow run per (fold, seed) when tracking is on.
 
     Tracking calls are deliberately kept off the seeding/training boundary: params go in after
@@ -121,10 +121,10 @@ def run_fold(fold_cfg, data, seed=SEED, feature_set="original"):
         run_name=run_name,
         tags={"fold": fold_cfg["name"], "seed": seed, "stage": "walk-forward", "feature_set": feature_set},
     ):
-        return _run_fold_impl(fold_cfg, data, seed, feature_set)
+        return _run_fold_impl(fold_cfg, data, seed, feature_set, save_predictions)
 
 
-def _run_fold_impl(fold_cfg, data, seed, feature_set="original"):
+def _run_fold_impl(fold_cfg, data, seed, feature_set="original", save_predictions=True):
     feature_names = FEATURE_SETS[feature_set]
     data = frame_for_feature_set(data, feature_set)
 
@@ -180,15 +180,18 @@ def _run_fold_impl(fold_cfg, data, seed, feature_set="original"):
 
     test_dates = test_df['observation_date'].values[SEQUENCE_LENGTH - 1:]
 
-    pred_dir = predictions_dir(feature_set)
-    os.makedirs(pred_dir, exist_ok=True)
-    np.savez(
-        os.path.join(pred_dir, f"{fold_cfg['name']}.npz"),
-        dates=test_dates.astype("datetime64[D]").astype(str),
-        returns=returns,
-        var_pred=var_pred,
-        calib_n=calib_n,
-    )
+    # A one-off training run (mtl-var train) must not overwrite the committed prediction caches the
+    # research results were computed from.
+    if save_predictions:
+        pred_dir = predictions_dir(feature_set)
+        os.makedirs(pred_dir, exist_ok=True)
+        np.savez(
+            os.path.join(pred_dir, f"{fold_cfg['name']}.npz"),
+            dates=test_dates.astype("datetime64[D]").astype(str),
+            returns=returns,
+            var_pred=var_pred,
+            calib_n=calib_n,
+        )
 
     rolling = rolling_calibration_analysis(test_dates, returns, var_pred, eval_start_idx=calib_n,
                                             trigger_on_elevated=False)

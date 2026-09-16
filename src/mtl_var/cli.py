@@ -20,6 +20,12 @@ def main(argv=None):
                     help="original reproduces the recorded results but contains target leakage "
                          "(RESULTS.md section 13); leakage_free lags every day-t feature one day")
 
+    tr = sub.add_parser("train", help="train one fold's model on the leakage-free features and log it to MLflow")
+    tr.add_argument("--fold", default="fold5_2022_bear",
+                    help="fold to train (default: fold5_2022_bear - trained on 2004-2021, the model that is served)")
+    tr.add_argument("--seed", type=int, default=42)
+    tr.add_argument("--csv", default=DEFAULT_CSV, help=f"path to the OHLCV csv (default: {DEFAULT_CSV})")
+
     bf = sub.add_parser("backfill-mlflow",
                         help="create MLflow runs from already-recorded results (no retraining)")
     bf.add_argument("--experiment", default=None, help="MLflow experiment name")
@@ -64,6 +70,23 @@ def main(argv=None):
     if args.command == "walk-forward":
         from .pipeline import main as run_walk_forward
         run_walk_forward(csv_path=args.csv, feature_set=args.feature_set)
+        return 0
+
+    if args.command == "train":
+        from . import tracking
+        from .data import load_and_engineer_features
+        from .pipeline import FOLDS, run_fold
+
+        fold_cfg = next((f for f in FOLDS if f["name"] == args.fold), None)
+        if fold_cfg is None:
+            parser.error(f"unknown fold {args.fold!r}; expected one of {[f['name'] for f in FOLDS]}")
+        if not tracking.tracking_enabled():
+            parser.error("tracking is disabled (MTL_VAR_TRACKING=0), so there would be nothing to register")
+
+        result = run_fold(fold_cfg, load_and_engineer_features(args.csv), seed=args.seed,
+                          feature_set="leakage_free", save_predictions=False)
+        print(f"logged model {result.get('mlflow_model_uri')}")
+        print(f"register it with: mtl-var register-model --fold {args.fold} --seed {args.seed} --alias production")
         return 0
 
     if args.command == "backfill-mlflow":

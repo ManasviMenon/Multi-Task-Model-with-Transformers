@@ -49,9 +49,10 @@ def default_description(fold, seed, metrics, feature_set="original", supersedes=
     """Short lineage blurb, including the caveats a deployer needs to see.
 
     The honest limitations go in the description on purpose. The VaR calibration passes its own
-    fold and does not generalise across regimes (4 of 5 folds fail, robustly across 10 seeds),
-    and the feature set decides whether the return head means anything at all. Anyone loading
-    this from the registry should know both before trusting the output.
+    fold and does not generalise across regimes (4 of 5 folds fail, a verdict that holds across
+    every model variant tested), and the feature set decides whether the return head means
+    anything at all. Anyone loading this from the registry should know both before trusting the
+    output.
     """
     cov = metrics.get("var_cal_coverage")
     kp = metrics.get("var_cal_kupiec_p")
@@ -72,8 +73,10 @@ def default_description(fold, seed, metrics, feature_set="original", supersedes=
         f"Multi-task SPX transformer (5 heads: log_return, log_volume, yz_vol, VaR_5, CVaR_5). "
         f"Trained by mtl_var.pipeline.run_fold on {fold}, seed={seed}.{perf}{features}{lineage} "
         f"CAVEAT: the post-hoc VaR calibration does not generalise across regimes - 4 of 5 "
-        f"walk-forward folds fail Kupiec, robustly across 10 seeds each (RESULTS.md 3, 11). "
-        f"Treat the VaR head as calibrated only for conditions resembling its own test window."
+        f"walk-forward folds fail Kupiec (RESULTS.md 3, 13). That fold-level verdict is unchanged "
+        f"across the leakage-free model, the original-feature model and a model-free backtest of "
+        f"the raw VaR target. Treat the VaR head as calibrated only for conditions resembling its "
+        f"own test window."
     )
 
 
