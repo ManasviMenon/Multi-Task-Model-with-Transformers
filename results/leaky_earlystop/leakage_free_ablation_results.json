@@ -1,0 +1,177 @@
+[
+  {
+    "case": "single_split_mtl",
+    "epochs_run": 20,
+    "best_val_loss": 0.19761533414324126,
+    "n_train": 3760,
+    "n_test": 940,
+    "accuracy": {
+      "log_return": {
+        "mae": 0.009684252152481773,
+        "rmse": 0.014904060457846527
+      },
+      "log_volume": {
+        "mae": 0.15655824065306478,
+        "rmse": 0.22138882248349098
+      },
+      "yz_vol": {
+        "mae": 3.954634389636419e-05,
+        "rmse": 0.0001359890823435415
+      },
+      "VaR_5": {
+        "mae": 0.004194056915034445,
+        "rmse": 0.00544798740239713
+      },
+      "CVaR_5": {
+        "mae": 0.00470510718026449,
+        "rmse": 0.009953813275482214
+      }
+    },
+    "var_calibration": {
+      "calib_n": 470,
+      "eval_n": 470,
+      "offset": -0.018942191847061394,
+      "uncalibrated": {
+        "breaches": 169,
+        "coverage": 0.3595744680851064,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 20,
+        "coverage": 0.0425531914893617,
+        "kupiec_p": 0.4476330253096711
+      }
+    }
+  },
+  {
+    "case": "single_split_single_task",
+    "epochs_run": 9,
+    "best_val_loss": 0.12147499124209087,
+    "var_mae": 0.0049386045026533045,
+    "var_calibration": {
+      "calib_n": 470,
+      "eval_n": 470,
+      "offset": -0.018043660192174755,
+      "uncalibrated": {
+        "breaches": 158,
+        "coverage": 0.33617021276595743,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 22,
+        "coverage": 0.04680851063829787,
+        "kupiec_p": 0.7483970001048239
+      }
+    }
+  },
+  {
+    "case": "single_task_fold1_gfc",
+    "fold": "fold1_gfc",
+    "epochs_run": 7,
+    "best_val_loss": 0.4397571440786123,
+    "var_mae": 0.0059037978678541814,
+    "var_calibration": {
+      "calib_n": 250,
+      "eval_n": 251,
+      "offset": -0.03908672248026833,
+      "uncalibrated": {
+        "breaches": 73,
+        "coverage": 0.2908366533864542,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 5,
+        "coverage": 0.0199203187250996,
+        "kupiec_p": 0.013262580616093644
+      }
+    }
+  },
+  {
+    "case": "single_task_fold2_eu_crisis",
+    "fold": "fold2_eu_crisis",
+    "epochs_run": 16,
+    "best_val_loss": 0.06454457451278965,
+    "var_mae": 0.004163795648232353,
+    "var_calibration": {
+      "calib_n": 375,
+      "eval_n": 375,
+      "offset": -0.018177104312643647,
+      "uncalibrated": {
+        "breaches": 112,
+        "coverage": 0.2986666666666667,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 3,
+        "coverage": 0.008,
+        "kupiec_p": 4.157583665787001e-06
+      }
+    }
+  },
+  {
+    "case": "single_task_fold3_2015_selloff",
+    "fold": "fold3_2015_selloff",
+    "epochs_run": 12,
+    "best_val_loss": 0.05333279989038905,
+    "var_mae": 0.0026454811755319786,
+    "var_calibration": {
+      "calib_n": 375,
+      "eval_n": 376,
+      "offset": -0.012495824670252417,
+      "uncalibrated": {
+        "breaches": 124,
+        "coverage": 0.32978723404255317,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 4,
+        "coverage": 0.010638297872340425,
+        "kupiec_p": 2.422546129476899e-05
+      }
+    }
+  },
+  {
+    "case": "single_task_fold4_covid",
+    "fold": "fold4_covid",
+    "epochs_run": 14,
+    "best_val_loss": 0.15053504263050854,
+    "var_mae": 0.0038184890256589906,
+    "var_calibration": {
+      "calib_n": 250,
+      "eval_n": 251,
+      "offset": -0.008933357810897925,
+      "uncalibrated": {
+        "breaches": 94,
+        "coverage": 0.3745019920318725,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 40,
+        "coverage": 0.1593625498007968,
+        "kupiec_p": 1.4305656659274746e-10
+      }
+    }
+  },
+  {
+    "case": "single_task_fold5_2022_bear",
+    "fold": "fold5_2022_bear",
+    "epochs_run": 8,
+    "best_val_loss": 0.10545987915247679,
+    "var_mae": 0.005671232217221696,
+    "var_calibration": {
+      "calib_n": 123,
+      "eval_n": 124,
+      "offset": -0.02301019521365838,
+      "uncalibrated": {
+        "breaches": 50,
+        "coverage": 0.4032258064516129,
+        "kupiec_p": 0.0
+      },
+      "calibrated": {
+        "breaches": 3,
+        "coverage": 0.024193548387096774,
+        "kupiec_p": 0.1443909755485061
+      }
+    }
+  }
+]

@@ -15,7 +15,7 @@ import numpy as np
 import pytest
 from scipy.stats import chi2
 
-from mtl_var.backtest import kupiec_from_counts, kupiec_test
+from mtl_var.backtest import kupiec_from_counts, kupiec_lr, kupiec_test
 
 # fold5_2022_bear, calibrated, as recorded in results/walk_forward_results.json
 FOLD5_BREACHES = 3
@@ -54,14 +54,30 @@ def test_undercoverage_and_overcoverage_both_rejected():
     assert kupiec_from_counts(60, 400) < 0.05   # 15% vs 5% target
 
 
-@pytest.mark.parametrize("N,T", [(0, 100), (100, 100), (0, 0)])
-def test_boundary_cases_return_nan_not_a_number(N, T):
-    """Zero or all breaches are undefined, and must not underflow into a bogus p-value.
+def test_zero_breaches_is_a_valid_rejection_not_nan():
+    """Reviewer correction (ACAI 2026): with 0*log(0) = 0 the LR has a valid limit at N = 0.
 
-    This is published behaviour - RESULTS.md reports 'p=n/a' for the L=175 GFC cell and the
-    empirical-VaR 2008 cell, both of which are the N == 0 case.
+    0 breaches in 251 days at 5%: LR = -2*251*ln(0.95) = 25.75, p ~ 3.9e-7. This is the case
+    behind the two cells RESULTS.md previously reported as 'n/a' (L=175 GFC and empirical-VaR
+    2008); both are failures.
     """
-    assert math.isnan(kupiec_from_counts(N, T))
+    lr = kupiec_lr(0, 251)
+    assert lr == pytest.approx(-2 * 251 * math.log(0.95), rel=1e-12)
+    assert lr == pytest.approx(25.75, abs=0.005)
+    p = kupiec_from_counts(0, 251)
+    assert p == pytest.approx(float(chi2.sf(-2 * 251 * math.log(0.95), 1)), rel=1e-12)
+    assert p == pytest.approx(3.9e-7, rel=0.02)
+    assert p < 0.05
+
+
+def test_all_breaches_is_handled_symmetrically():
+    """N == T: LR = -2*T*ln(p)."""
+    assert kupiec_lr(100, 100) == pytest.approx(-2 * 100 * math.log(0.05), rel=1e-12)
+    assert kupiec_from_counts(100, 100) < 1e-100
+
+
+def test_no_observations_is_still_nan():
+    assert math.isnan(kupiec_from_counts(0, 0))
 
 
 def test_kupiec_test_counts_breaches_as_strictly_below():

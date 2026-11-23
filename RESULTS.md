@@ -248,7 +248,7 @@ Pre-registered: **rescue = fold1_gfc flips to p ≥ 0.05; regression = any of {2
 
 | Fold | L=40 | L=60 | L=90 | L=125 (baseline) | L=175 |
 |---|---|---|---|---|---|
-| 2008 GFC | **4.78% cov, p=0.873** | 2.39%, p=0.035 | 1.99%, p=0.013 | 0.80%, p=0.00016 | 0.00%, p=n/a |
+| 2008 GFC | **4.78% cov, p=0.873** | 2.39%, p=0.035 | 1.99%, p=0.013 | 0.80%, p=0.00016 | 0.00%, p=3.9×10⁻⁷ (FAIL) |
 | 2011 EU crisis | 5.33%, p=0.77 | 4.80%, p=0.86 | 4.53%, p=0.67 | 4.00%, p=0.36 | 4.27%, p=0.50 |
 | 2015 selloff | 7.45%, p=**0.042 (fail)** | 6.65%, p=0.16 | 4.52%, p=0.67 | 3.72%, p=0.24 | 2.93%, p=**0.046 (fail)** |
 | 2020 COVID | 9.56%, p=0.003 (fail) | 9.96%, p=0.001 (fail) | 8.37%, p=0.025 (fail) | 7.57%, p=0.081 | 7.17%, p=0.137 |
@@ -287,7 +287,7 @@ the loss fix. Only the "Parametric" column moved.
 
 | Fold | Parametric, calibrated | Empirical, raw | Empirical, calibrated |
 |---|---|---|---|
-| 2008 GFC | 1.59% cov, p=0.0041 | 0.80% cov, p=0.0002 | 0.00% cov, p=n/a |
+| 2008 GFC | 1.59% cov, p=0.0041 | 0.80% cov, p=0.0002 | 0.00% cov, p=3.9×10⁻⁷ |
 | 2011 EU crisis | 0.80% cov, p=0.0000042 | 3.20% cov, p=0.088 | 1.60% cov, p=0.0005 |
 | 2015 selloff | 0.80% cov, p=0.0000040 | 2.39% cov, p=0.010 | 2.13% cov, p=0.0041 |
 | 2020 COVID | 17.53% cov, p=6.0×10⁻¹³ | 8.37% cov, p=0.025 | 11.55% cov, p=0.00004 |
@@ -307,7 +307,7 @@ calibration procedure itself is what's fragile to regime shift, independent of t
 
 | Fold | N=125 | N=250 | N=500 |
 |---|---|---|---|
-| 2008 GFC | fail (0.0%, p=nan) | fail (0.0%, p=nan) | fail (0.4%, p=0.00002) |
+| 2008 GFC | fail (0.0%, p=3.9×10⁻⁷) | fail (0.0%, p=3.9×10⁻⁷) | fail (0.4%, p=0.00002) |
 | 2011 EU crisis | fail (1.6%, p=0.0005) | fail (1.6%, p=0.0005) | fail (0.8%, p=0.000004) |
 | 2015 selloff | **PASS (5.1%, p=0.962)** | fail (2.1%, p=0.0041) | fail (0.8%, p=0.000004) |
 | 2020 COVID | **PASS (7.6%, p=0.082)** | fail (11.6%, p=0.00004) | fail (12.0%, p=0.00002) |
@@ -730,7 +730,7 @@ Window sweep on the leakage-free model (calibrated coverage, Kupiec p):
 
 | Fold | L=40 | L=60 | L=90 | L=125 | L=175 |
 |---|---|---|---|---|---|
-| 2008 GFC | **4.78%, 0.873** | 2.39%, 0.036 | 1.99%, 0.013 | 0.80%, 0.00016 | 0.00%, n/a |
+| 2008 GFC | **4.78%, 0.873** | 2.39%, 0.036 | 1.99%, 0.013 | 0.80%, 0.00016 | 0.00%, 3.9e-07 |
 | 2011 EU crisis | 5.60%, 0.601 | 4.53%, 0.674 | 4.53%, 0.674 | 4.27%, 0.504 | 4.53%, 0.674 |
 | 2015 selloff | 6.91%, 0.106 | 6.12%, 0.336 | 5.05%, 0.962 | 4.26%, 0.497 | 3.19%, 0.086 |
 | 2020 COVID | 9.56%, 0.003 | 9.56%, 0.003 | 7.17%, 0.137 | 7.17%, 0.137 | 7.17%, 0.137 |
@@ -763,6 +763,371 @@ Version 1 — the original fold5 model, trained on the leaky features — was **
 superseded**, so it cannot be served by accident. It was not erased. Its training run and logged
 model remain in the tracking store and still load; the registered model's own description records
 the retirement and why; and this section and the git history keep the finding.
+
+## 14. ACAI 2026 review: revisions run on the leakage-free model
+
+The paper received conditional acceptance with six revisions. The code-side ones are below. Every
+figure is computed from integer breach counts N and T and shown with them. Pre-registered readings
+are in the docstrings of `scripts/reviewer_backtests.py` and `scripts/return_quantile_control.py`,
+written before those scripts produced any number.
+
+> **Superseded for every neural-model number: see §15.** The models behind this section's transformer
+> and return-quantile figures used the test window for early stopping. §15 retrains all of them with
+> early stopping on the training tail. Every frozen-offset, rolling and sweep verdict survives that
+> retrain except one marginal sweep cell. The return-quantile head's raw coverage (C1) does **not**
+> survive. The classical baselines (14.3) and the 14.1 correction don't involve training and are
+> unchanged.
+
+### 14.1 Correction: Kupiec at zero breaches is a rejection, not "n/a" (reviewer item 1)
+
+`kupiec_from_counts` returned NaN at N = 0 and N = T. That was wrong: taking 0·log 0 = 0, the
+unrestricted likelihood is exactly 1, so LR = −2T·ln(1−p) at N = 0 (−2T·ln p at N = T). For 0 breaches
+in 251 days, LR = −2·251·ln 0.95 = **25.75, p = 3.9×10⁻⁷**. The function now computes every statistic in
+log space with `xlogy`, which builds in that convention, and uses `chi2.sf`. Regression tests are in
+`tests/test_kupiec.py`.
+
+The cells that were "n/a" are now failures. All are 0/251 on the 2008 GFC evaluation half:
+
+| Cell | Was | Now |
+|---|---|---|
+| Window sweep L=175, GFC (leakage-free model; also original model and §13 table) | 0.00%, n/a | 0/251, LR 25.75, p = 3.9×10⁻⁷, FAIL |
+| Empirical VaR N=250 calibrated, GFC (§9) | 0.00%, n/a | 0/251, p = 3.9×10⁻⁷, FAIL |
+| Empirical VaR N=125 calibrated, GFC (§9 sensitivity) | 0.0%, p=nan | 0/251, p = 3.9×10⁻⁷, FAIL |
+
+The three affected scripts were re-run, and every other value in their JSON outputs was checked against
+the committed version. No other number moved by more than 1e-9 relative. The pass/fail counts were
+already right, because the scripts counted NaN as a failure. Only the reported p-values change.
+The live breach monitor (`src/mtl_var/monitoring.py`) had its own boundary workaround, which now
+just calls the corrected function. `results/empirical_var_comparison_results_buggy_loss.json` is a historical backup
+and was left as it was.
+
+### 14.2 Christoffersen independence and conditional coverage (reviewer item 3)
+
+Added to `mtl_var.backtest`: LR_ind (first-order Markov alternative, from the 2×2 transition counts),
+LR_cc = LR_POF + LR_ind on χ²(2), and a Wilson 95% interval on N/T. Tests are in
+`tests/test_christoffersen.py`. The table covers the leakage-free model, frozen offset, evaluation half:
+
+| Fold | Eval dates | N/T | Coverage [Wilson 95%] | LR_POF / p | n01, n11 | LR_ind / p | LR_cc / p | Verdict |
+|---|---|---|---|---|---|---|---|---|
+| 2008 GFC | 2009-01-05 – 2009-12-31 | 4/251 | 1.59% [0.6, 4.0] | 8.26 / 0.0041 | 4, 0 | 0.13 / 0.72 | 8.39 / 0.015 | reject POF, CC |
+| 2011 EU crisis | 2012-07-05 – 2013-12-31 | 3/375 | 0.80% [0.3, 2.3] | 21.19 / 4.2×10⁻⁶ | 3, 0 | 0.05 / 0.83 | 21.24 / 2.4×10⁻⁵ | reject POF, CC |
+| 2015 selloff | 2016-07-06 – 2017-12-29 | 4/376 | 1.06% [0.4, 2.7] | 17.82 / 2.4×10⁻⁵ | 4, 0 | 0.09 / 0.77 | 17.91 / 1.3×10⁻⁴ | reject POF, CC |
+| 2020 COVID | 2020-01-06 – 2020-12-31 | 35/251 | 13.94% [10.2, 18.8] | 29.08 / 7.0×10⁻⁸ | 31, 4 | 0.23 / 0.63 | 29.31 / 4.3×10⁻⁷ | reject POF, CC |
+| 2022 bear | 2022-07-07 – 2022-12-30 | 4/124 | 3.23% [1.3, 8.0] | 0.93 / 0.33 | 4, 0 | 0.27 / 0.60 | 1.20 / 0.55 | no rejection |
+
+Rolling recalibration (L=125, R=21), same evaluation slice:
+
+| Fold | N/T | Coverage [Wilson 95%] | p_POF | p_ind | p_cc | Verdict |
+|---|---|---|---|---|---|---|
+| 2008 GFC | 2/251 | 0.80% [0.2, 2.9] | 1.6×10⁻⁴ | 0.86 | 8.1×10⁻⁴ | reject |
+| 2011 EU crisis | 16/375 | 4.27% [2.6, 6.8] | 0.50 | 0.71 | 0.75 | no rejection |
+| 2015 selloff | 16/376 | 4.26% [2.6, 6.8] | 0.50 | 0.23 | 0.39 | no rejection |
+| 2020 COVID | 18/251 | 7.17% [4.6, 11.0] | 0.14 | 0.53 | 0.27 | no rejection |
+| 2022 bear | 4/122 | 3.28% [1.3, 8.1] | 0.35 | 0.60 | 0.57 | no rejection |
+
+Against the pre-registration:
+
+- **R3a** (folds that fail Kupiec also fail LR_cc): yes, all four. As expected, this adds little.
+- **R3b(i), 2022:** no test rejects. Its Wilson interval, 1.3% to 8.0%, contains 5%. It also contains
+  GFC's 1.59%, which is a clear failure. With 124 days the fold can't tell either rate apart from 5%. The
+  paper should say "not rejected", never "correctly calibrated".
+- **R3b(ii), rolling rescues:** all four survive LR_ind and LR_cc. The "rolling recalibration rescues
+  4/5" claim stands under the fuller tests.
+- **Clustering is not where the calibrated model fails.** LR_ind never rejects for the transformer after
+  either calibration (smallest p = 0.23). The four failures are frequency failures: too few breaches in
+  GFC, EU crisis and 2015, too many in COVID. Independence rejects only in places like the transformer's
+  raw COVID output (p = 0.015) and HS-250 in COVID.
+- **Exceedance severity** (mean / worst return minus VaR on breach days, frozen offset): GFC −0.40% /
+  −0.80%, EU −0.44% / −0.54%, 2015 −0.39% / −1.04%, COVID −1.91% / **−10.92%**, 2022 −0.77% / −2.10%.
+  A formal expected-shortfall backtest was not run. The pipeline produces no ES forecast that goes with
+  the calibrated VaR (the CVaR head is trained on its own proxy and is not offset-calibrated), so the
+  severity figures are descriptive only.
+
+### 14.3 Classical VaR under the identical five-fold protocol (reviewer item 4)
+
+`scripts/reviewer_backtests.py` runs three genuine one-step-ahead 5% quantile estimators on the
+transformer's exact evaluation dates. The script asserts that the realised returns are identical. None
+of the estimators is tuned to the folds:
+
+- **HS-250**: 5th percentile of the previous 250 log returns.
+- **EWMA**: RiskMetrics λ = 0.94, Gaussian, zero mean.
+- **GARCH(1,1)**: Gaussian, constant mean, fitted once per fold on that fold's training period only,
+  then filtered forward with parameters held fixed.
+
+Each is run raw, with the frozen half/half offset, and with rolling L=125, R=21. Verdict at 5% (reject
+if POF or CC rejects; full statistics are in `results/reviewer_backtests_results.json`):
+
+| Fold | Transformer raw | Transformer frozen | HS raw | HS frozen | EWMA raw | EWMA frozen | GARCH raw | GARCH frozen |
+|---|---|---|---|---|---|---|---|---|
+| 2008 GFC | 75/251 ✗ | 4/251 ✗ | 2/251 ✗ | 0/251 ✗ | 13/251 ✓ | 8/251 ✓ | 18/251 ✓ | 8/251 ✓ |
+| 2011 EU crisis | 116/375 ✗ | 3/375 ✗ | 12/375 ✓ | 6/375 ✗ | 18/375 ✓ | 8/375 ✗ | 16/375 ✓ | 10/375 ✗ (POF only, p_cc 0.058) |
+| 2015 selloff | 118/376 ✗ | 4/376 ✗ | 9/376 ✗ | 8/376 ✗ | 13/376 ✓ | 12/376 ✓ | 8/376 ✗ | 6/376 ✗ |
+| 2020 COVID | 92/251 ✗ | 35/251 ✗ | 21/251 ✗ | 29/251 ✗ | 15/251 ✓ | 17/251 ✗ (IND+CC) | 17/251 ✓ | 18/251 ✓ |
+| 2022 bear | 51/124 ✗ | 4/124 ✓ | 3/124 ✓ | 1/124 ✗ | 5/124 ✓ | 2/124 ✗ (POF p 0.045) | 7/124 ✓ | 4/124 ✓ |
+| **Rejected** | 5/5 | 4/5 | 3/5 | **5/5** | **0/5** | 3/5 | 1/5 | 2/5 |
+
+With rolling recalibration, EWMA and GARCH are rejected in **0/5** folds, HS-250 in 3/5 (2015, COVID,
+2022), and the transformer in 1/5 (GFC).
+
+Against the pre-registration:
+
+- **R4a, not met for EWMA or GARCH.** Under the frozen offset, HS-250 is rejected in all four folds
+  where the transformer is rejected. EWMA and GARCH are rejected in only 2 of the 4. EWMA passes GFC and
+  2015, and GARCH passes GFC and COVID. So the transformer's fold-by-fold failure pattern is **not**
+  reproduced by the parametric baselines, and the paper cannot say "classical methods fail the same way
+  under identical conditions".
+- **R4b, no narrowing triggered.** No baseline goes unrejected in 4 or more folds under the frozen offset
+  (most is GARCH, 3/5).
+- **R4c, causal isolation: the frozen offset did the damage, for every classical method.** Applying the
+  offset never turned a rejection into a non-rejection: 0 of 15 method-fold cells. It turned a
+  non-rejection into a rejection in 6 cells: HS (EU, 2022), EWMA (EU, COVID, 2022) and GARCH (EU). EWMA
+  is the cleanest case. On the same dates with the same returns, it goes from **0/5 rejected raw to 3/5
+  rejected after the offset**. That is the direct evidence the reviewer said was missing.
+- **A plain, uncalibrated RiskMetrics EWMA is not rejected in any fold.** On these folds it is
+  better than the transformer pipeline, which needs an offset at all only because its raw output breaches
+  30–41% of days (see 14.4). This has to be reported in the paper, not left out.
+
+So what the reviewer asked for comes out mixed, and it should be written that way. The causal claim about
+the calibration step gets stronger: a frozen offset fitted in one regime degrades well-specified
+estimators in the next regime and never helps them. The "model-independent failure pattern" claim gets
+weaker: which folds fail depends on the estimator. Under the frozen offset the transformer (4/5 rejected)
+beats only HS-250 (5/5). EWMA (3/5) and GARCH (2/5) both do better.
+
+**Multiplicity in the window sweep (optional item).** Five window lengths were tried per fold. At a
+Bonferroni threshold of 0.05/5 = 0.01, **L=90 has no Kupiec rejection in any fold**. GFC's p = 0.013 no
+longer counts as a rejection. So "no static window passes every fold" holds only at the unadjusted 5%
+level. At 5%, L=90 fails GFC on Kupiec (p = 0.013) and fails GFC and COVID on LR_cc (p = 0.042, 0.034).
+The sweep was also chosen after looking at the folds, so it is exploratory. One correction to the
+denominators: rolling cannot start until day L, so the L=175 cell for 2022 is **2/72**, not out of 124.
+The paper's 2.78% is 2/72.
+
+### 14.4 What the VaR target actually is, and a direct return-quantile control (reviewer item 2)
+
+`VaR_5 = EWMA_span10(log_return_t) − 1.2·yz_vol_t`. `yz_vol` is the Yang-Zhang **variance** (a 20-day
+mean of squared log returns, median 5.2×10⁻⁵), not a volatility. So the 1.2 term is in return² units
+and is tiny: median 6.2×10⁻⁵, against a typical daily return magnitude of about 7×10⁻³. Over the full
+sample:
+
+- the EWMA term explains **99.3%** of the target's variance;
+- realised returns fall below the target on **51.0%** of days (in-sample, same day);
+- a unit-consistent version, EWMA − 1.645·√yz_vol, would be breached on **4.93%** of days.
+
+The constructed target is a smoothed return, not a 5% quantile. Pinball loss at q = 0.05 then estimates
+the conditional 5% quantile *of that proxy*. That is why the transformer's raw output breaches 30–41% of
+days, and why the post-hoc offset does essentially all the work. No statistical VaR guarantee holds
+before calibration. The source of the 1.2 factor is not documented anywhere in the repository. Time
+indexing on the leakage-free features: every input in row t is known by the close of t−1, and the target
+uses information through day t, so the forecast is one step ahead.
+
+**Control** (`scripts/return_quantile_control.py`). This is the identical single-task model (§10 body,
+one head, pinball q = 0.05, seed 42) on the leakage-free features. The only change is the target: the
+**realised log return**, not the proxy. The script asserts that the calendar, returns and calib_n match
+the primary model. Predictions are cached in `results/predictions_return_quantile/`.
+
+| Fold | Epochs | Raw N/T (%) | Frozen N/T (%) | Frozen p_POF / p_cc | Rolling N/T (%) | Rolling p_POF / p_cc |
+|---|---|---|---|---|---|---|
+| 2008 GFC | 7 | 18/251 (7.17) ✓ | 3/251 (1.20) | 9.7×10⁻⁴ / 0.0042 ✗ | 2/251 (0.80) | 1.6×10⁻⁴ / 8.1×10⁻⁴ ✗ |
+| 2011 EU crisis | 13 | 7/375 (1.87) ✗ | 6/375 (1.60) | 4.6×10⁻⁴ / 0.0020 ✗ | 18/375 (4.80) | 0.86 / 0.53 ✓ |
+| 2015 selloff | 8 | 12/376 (3.19) ✓ | 6/376 (1.60) | 4.4×10⁻⁴ / 0.0019 ✗ | 14/376 (3.72) | 0.24 / 0.29 ✓ |
+| 2020 COVID | 15 | 23/251 (9.16) ✗ | 21/251 (8.37) | 0.025 / 0.080 ✗ (POF) | 16/251 (6.37) | 0.34 / 0.41 ✓ |
+| 2022 bear | 6 | 4/124 (3.23) ✓ | 5/124 (4.03) | 0.61 / 0.34 ✓ | 6/122 (4.92) | 0.97 / 0.55 ✓ |
+
+- **C1** (*withdrawn in §15*): raw coverage is 1.9–9.2%, against 30–41% for the proxy-trained head.
+  Raw output is rejected in 2 of 5 folds: EU crisis (too few breaches) and COVID (too many). After the
+  early-stopping fix, raw coverage is 1.1–14.5% and is rejected in 5/5 folds. The good raw numbers came
+  from choosing the epoch by pinball loss on the test returns.
+- **C2, met.** Under the frozen offset the return-quantile head is rejected in **4 of the 4** folds where
+  the proxy model is rejected (GFC, EU crisis, 2015, COVID). It passes 2022, as the proxy model does.
+  Rolling recalibration again rescues every fold except GFC. **The regime-conditioned failure of the
+  frozen calibration persists when the head targets the return quantile directly.** The fold-level
+  verdicts are the same as the proxy model's in every column.
+- **C3:** the frozen offset turned a non-rejection into a rejection in GFC and 2015, and never the other
+  way round. This matches the classical baselines in 14.3.
+
+Read together with 14.3, C2 holds for the transformer under either target. For the classical methods,
+the frozen offset never repaired a raw rejection, and it broke well-behaved raw output in 6 method-fold
+cells. (This paragraph originally said "every method tested" and counted 8 cells. That included this
+head's GFC and 2015 cells, which §15 withdraws. After the fix, the head's raw output is rejected
+everywhere, and the frozen offset repairs it in 2022.) EWMA and GARCH also show that the per-fold pattern
+is not universal across estimator families.
+
+### 14.5 Reproducibility facts (reviewer item 6)
+
+- **Data:** `SPX500-18Y_scaled_y.csv` in the repository: S&P 500 daily OHLCV with Adj Close, raw rows
+  2004-01-02 to 2022-12-30. The provider is **not recorded** in the repository. The column layout
+  matches a Yahoo Finance ^GSPC export, but that needs confirming before it goes in the paper. After the
+  rolling-window NaN cascade, 4705 usable rows run from 2004-04-26 (one fewer for leakage-free lags).
+- **Alignment:** sequences are 5 rows. Sequence j covers rows j..j+4 and predicts row j+4's targets.
+  Leakage-free features replace the 8 day-t features with their one-day lags (`LEAKAGE_FREE_FEATURES`
+  in `src/mtl_var/data.py`). `tests/test_leakage_free_features.py` holds that construction fixed.
+- **Folds:** expanding training window from 2004-01-01. The tests are 2008–09, 2011–13, 2015–17,
+  2019–20 and 2022. The first 4 trading days of each test window are used up by the sequence length.
+
+  | Fold | Cached test window | Calibration half | Evaluation half | Frozen breaches |
+  |---|---|---|---|---|
+  | 2008 GFC | 2008-01-08 – 2009-12-31 | 2008-01-08 – 2009-01-02 (250 d) | 2009-01-05 – 2009-12-31 (251 d) | 4/251 |
+  | 2011 EU crisis | 2011-01-07 – 2013-12-31 | 2011-01-07 – 2012-07-03 (375 d) | 2012-07-05 – 2013-12-31 (375 d) | 3/375 |
+  | 2015 selloff | 2015-01-08 – 2017-12-29 | 2015-01-08 – 2016-07-05 (375 d) | 2016-07-06 – 2017-12-29 (376 d) | 4/376 |
+  | 2020 COVID | 2019-01-08 – 2020-12-31 | 2019-01-08 – 2020-01-03 (250 d) | 2020-01-06 – 2020-12-31 (251 d) | 35/251 (41/251 after §15) |
+  | 2022 bear | 2022-01-07 – 2022-12-30 | 2022-01-07 – 2022-07-06 (123 d) | 2022-07-07 – 2022-12-30 (124 d) | 4/124 |
+
+- **Calibration:** frozen offset = 5th percentile of (r − VaR) on the first ⌊T/2⌋ days, added to the
+  second half. Rolling: L = 125 trailing days, refreshed every R = 21 days, evaluated on the same second
+  half. Window sweep: L ∈ {40, 60, 90, 125, 175}.
+- **Monitor:** 10-day live volatility over the volatility of the active offset window, firing at a
+  ratio ≥ 1.5. Live breach monitor: 250-day window, 100-observation minimum.
+- **Seeds and determinism:** seed 42 (`mtl_var.seeding.SEED`), with `tf.config.experimental.enable_op_determinism()`.
+- **Breach rule:** r_t < VaR_t, strictly.
+- **Code:** github.com/ManasviMenon/Multi-Task-Model-with-Transformers. The paper should cite the
+  commit that contains this section.
+- **Early stopping (fixed in §15):** every neural run in this section used the fold's test window as
+  its early-stopping validation set. §15 replaces that with the last 15% of each fold's training
+  sequences and retrains every model.
+
+## 15. Early stopping moved off the test window: all neural models retrained
+
+**The problem.** `train_model` and `train_single_task` were always called with the fold's test window
+as `X_val`, so early stopping and best-weight restoration saw test-period targets. Features and targets
+were leakage-free, but model selection was not.
+
+**The fix.**
+- Early stopping now uses the last 15% of each fold's training sequences, in time order, with no
+  shuffling (`mtl_var.model.chronological_val_split`). The 15% was fixed before any result existed.
+- The pipeline trains only through `fit_with_train_tail_validation(X_train, y_train_z, n_features)`.
+  That function has no parameter that could receive test data. The test window is first touched by
+  `model.predict` after training ends.
+- Everything else is unchanged: architecture, losses, 0.2 weights, Adam 1e-4, batch 32, patience 5,
+  seed 42, 5-day sequences, leakage-free features. Scalers are still fit on the whole training period.
+- `tests/test_no_test_window_in_training.py` enforces the fix in three ways:
+  - no training function has a parameter or identifier containing "test";
+  - the validation split is the chronological tail;
+  - a stubbed end-to-end fold run hands the trainer exactly the training sequences.
+- New outputs go to `*_cleanval` paths, so they cannot overwrite the recorded runs. Byte-for-byte copies
+  of the old leakage-free results are in `results/leaky_earlystop/`.
+- The pre-registered readings P1–P5 are in `scripts/cleanval_report.py`, written before the first
+  retrain. Training ran with MLflow tracking off. The served model (registry version 2) was trained the
+  old way and has **not** been re-registered.
+
+### 15.1 Five-fold MTL retrain (frozen offset)
+
+| Fold | Epochs old→new | n_fit / n_val | Old N/T, p | New N/T, p | Verdict |
+|---|---|---|---|---|---|
+| 2008 GFC | 7 → 10 | 785 / 138 | 4/251, 0.00406 | 4/251, 0.00406 | FAIL → FAIL |
+| 2011 EU crisis | 19 → 24 | 1428 / 252 | 3/375, 4.16e-06 | 3/375, 4.16e-06 | FAIL → FAIL |
+| 2015 selloff | 16 → 18 | 2283 / 403 | 4/376, 2.42e-05 | 4/376, 2.42e-05 | FAIL → FAIL |
+| 2020 COVID | 29 → 19 | 3138 / 554 | 35/251, 6.95e-08 | **41/251, 3.8e-11** | FAIL → FAIL |
+| 2022 bear | 16 → 21 | 3782 / 667 | 4/124, 0.334 | 4/124, 0.334 | pass → pass |
+
+**P1: no verdict flips.** Four folds land on identical breach counts even though the VaR predictions
+changed (VaR MAE moves 0.80× to 1.25×). That is consistent with §13: the counts are driven mainly by the
+target and the offset, not the network. GFC's old "validation" loss of 2.40 was the 2008–09 crisis itself.
+Its new one, on 2007, is 0.43.
+
+Raw (uncalibrated) breaches, old → new: 75→93/251, 116→109/375, 118→88/376, 92→93/251, 51→55/124. All are
+still rejected.
+
+Per-task MAE, old → new (ratio):
+
+| Fold | log_return | log_volume | yz_vol | VaR₅ | CVaR₅ |
+|---|---|---|---|---|---|
+| 2008 GFC | 0.01554 → 0.01518 (0.98×) | 0.5753 → 0.6846 (1.19×) | 2.36e-4 → 2.55e-4 (1.08×) | 0.005354 → 0.004268 (0.80×) | 0.01744 → 0.01985 (1.14×) |
+| 2011 EU crisis | 0.00777 → 0.007255 (0.93×) | 0.1618 → 0.1308 (0.81×) | 3.30e-5 → 2.97e-5 (0.90×) | 0.003856 → 0.004185 (1.09×) | 0.004187 → 0.00392 (0.94×) |
+| 2015 selloff | 0.005349 → 0.005392 (1.01×) | 0.1331 → 0.1125 (0.85×) | 1.46e-5 → 2.06e-5 (1.41×) | 0.002523 → 0.003162 (1.25×) | 0.002489 → 0.002915 (1.17×) |
+| 2020 COVID | 0.009576 → 0.009581 (1.00×) | 0.1446 → 0.1616 (1.12×) | 5.31e-5 → 7.29e-5 (1.37×) | 0.004242 → 0.004071 (0.96×) | 0.006324 → 0.007316 (1.16×) |
+| 2022 bear | 0.01285 → 0.01248 (0.97×) | 0.1071 → 0.1297 (1.21×) | 3.20e-5 → 2.34e-5 (0.73×) | 0.004932 → 0.004433 (0.90×) | 0.003089 → 0.003182 (1.03×) |
+
+Accuracy moves both ways with no consistent direction. The return head still has no skill: GFC 0.01518 vs
+predict-zero 0.014925, 2022 0.01248 vs 0.01204.
+
+### 15.2 Rolling recalibration and the window sweep
+
+Rolling, L=125, R=21 (old → new): GFC 2/251 → 2/251 (reject); EU 16/375 → 17/375; 2015 16/376 → 14/376;
+COVID 18/251 → 19/251 (p_POF 0.082, p_cc 0.100); 2022 4/122 → 4/122. **P2a holds: rolling rescues every
+fold except 2008.**
+
+Window sweep, new (old), N/T and Kupiec p; ✗ = rejected at 5%:
+
+| Fold | L=40 | L=60 | L=90 | L=125 | L=175 |
+|---|---|---|---|---|---|
+| 2008 GFC | 12/251, 0.873 (same) | 6/251, 0.036 ✗ (same) | 5/251, 0.013 ✗ (same) | 2/251, 1.6e-4 ✗ (same) | 0/251, 3.9e-7 ✗ (same) |
+| 2011 EU crisis | 23/375, 0.33 (21, 0.60) | 19/375, 0.95 (17, 0.67) | 17/375, 0.67 (same) | 17/375, 0.67 (16, 0.50) | 15/375, 0.36 (17, 0.67) |
+| 2015 selloff | 26/376, 0.106 (same) | 24/376, 0.24 (23, 0.34) | 19/376, 0.96 (same) | 14/376, 0.24 (16, 0.50) | 13/376, 0.15 (12, 0.086) |
+| 2020 COVID | 26/251, 6.1e-4 ✗ (24, 0.003 ✗) | 24/251, 0.003 ✗ (same) | 18/251, 0.137 (same) | 19/251, 0.082 (18, 0.137) | **20/251, 0.046 ✗** (18, 0.137) |
+| 2022 bear | 6/124, 0.93 (5, 0.61) | 6/124, 0.93 (same) | 4/124, 0.33 (5, 0.61) | 4/122, 0.35 (same) | 2/72, 0.35 (same) |
+
+**P2b holds: no single window passes every fold at 5%.** One cell changed verdict: COVID at L=175 now
+fails, marginally. The multiplicity caveat from 14.3 is unchanged: at a Bonferroni threshold of 0.01,
+L=90 is rejected nowhere.
+
+### 15.3 Christoffersen, frozen offset (new models)
+
+| Fold | N/T | Coverage [Wilson 95%] | LR_POF / p | n01, n11 | LR_ind / p | LR_cc / p | Verdict |
+|---|---|---|---|---|---|---|---|
+| 2008 GFC | 4/251 | 1.59% [0.6, 4.0] | 8.26 / 0.0041 | 4, 0 | 0.13 / 0.72 | 8.39 / 0.015 | reject POF, CC |
+| 2011 EU crisis | 3/375 | 0.80% [0.3, 2.3] | 21.19 / 4.2e-6 | 3, 0 | 0.05 / 0.83 | 21.24 / 2.4e-5 | reject POF, CC |
+| 2015 selloff | 4/376 | 1.06% [0.4, 2.7] | 17.82 / 2.4e-5 | 4, 0 | 0.09 / 0.77 | 17.91 / 1.3e-4 | reject POF, CC |
+| 2020 COVID | 41/251 | 16.33% [12.3, 21.4] | 43.71 / 3.8e-11 | 34, 7 | 0.02 / 0.90 | 43.73 / 3.2e-10 | reject POF, CC |
+| 2022 bear | 4/124 | 3.23% [1.3, 8.0] | 0.93 / 0.33 | 4, 0 | 0.27 / 0.60 | 1.20 / 0.55 | no rejection |
+
+**P3 holds.** 2022 is still rejected by nothing. Independence still never rejects (smallest p = 0.60).
+
+### 15.4 Single-task heads (VaR-proxy ablation and return-quantile control)
+
+Frozen offset, old → new:
+
+| Fold | VaR-proxy head | Return-quantile head |
+|---|---|---|
+| 2008 GFC | 5/251, p 0.013 → 4/251, p 0.0041 (FAIL) | 3/251, p 9.7e-4 → 2/251, p 1.6e-4 (FAIL) |
+| 2011 EU crisis | 3/375, p 4.2e-6 → 3/375, p 4.2e-6 (FAIL) | 6/375, p 4.6e-4 → 9/375, p 0.011 (FAIL) |
+| 2015 selloff | 4/376, p 2.4e-5 → 3/376, p 4.0e-6 (FAIL) | 6/376, p 4.4e-4 → 8/376, p 0.0041 (FAIL) |
+| 2020 COVID | 40/251, p 1.4e-10 → 42/251, p 9.8e-12 (FAIL) | 21/251, p 0.025 → 31/251, p 5.6e-6 (FAIL) |
+| 2022 bear | 3/124, p 0.144 → 5/124, p 0.61 (pass) | 5/124, p 0.61 → 11/124, p 0.073 (pass) |
+
+- **Verdicts:** every frozen-offset verdict is unchanged for both heads.
+- **P4, C2 holds:** the return-quantile head is rejected in 4/4 of the folds where the clean MTL model is
+  rejected. Its rolling verdicts are also unchanged: GFC 1/251 rejected; EU 20/375, 2015 18/376,
+  COVID 19/251 and 2022 8/122 not rejected.
+- **Single-task vs MTL (clean, frozen):** identical breach counts in GFC (4 vs 4) and EU (3 vs 3). Single
+  is worse in 2015 (3 vs 4 against 5% expected) and COVID (42 vs 41). In 2022 the counts are 5 vs 4,
+  both passing. Still no consistent head-count effect, as §13 concluded.
+
+**What does not survive: the return-quantile head's raw coverage (C1 in 14.4).** Raw breaches with clean
+stopping:
+
+| Fold | Raw N/T | p_POF |
+|---|---|---|
+| 2008 GFC | 32/251 (12.75%) | 2.0e-6 |
+| 2011 EU crisis | 32/375 (8.53%) | 0.0042 |
+| 2015 selloff | 4/376 (1.06%) | 2.4e-5 |
+| 2020 COVID | 27/251 (10.76%) | 2.6e-4 |
+| 2022 bear | 18/124 (14.52%) | 6.4e-5 |
+
+That is **5/5 rejected**, against 2/5 before. Picking the epoch with the lowest pinball loss on the test
+returns was, in effect, tuning test-period coverage. Without it, the return-trained head is closer to 5%
+than the proxy head (30–41%), but it is not a well-calibrated quantile estimator. The 14.4 statement "C3:
+the frozen offset never repaired a raw rejection" also no longer holds for this head: in 2022 it turns
+18/124 (rejected) into 11/124 (not rejected).
+
+### 15.5 Unaffected by design (P5)
+
+The classical baselines were regenerated from the new run, and every HS-250, EWMA and GARCH entry is
+identical to the old file, GARCH parameters included. The model-free raw-target backtest and the 14.1
+Kupiec correction read no trained model, so they were left unchanged.
+
+### 15.6 What changes for the paper
+
+- **Every calibration conclusion survives:**
+  - frozen offset fails 4/5 and passes 2022 ("not rejected", interval 1.3–8.0%);
+  - rolling rescues all but 2008;
+  - no single window passes every fold at 5%;
+  - no clustering;
+  - the return-quantile control keeps the frozen-offset failure.
+- **Update these numbers:**
+  - COVID frozen: 41/251 (16.33%), was 35/251;
+  - COVID L=175 cell: now a failure (20/251, p = 0.046);
+  - all per-task MAEs.
+- **Withdraw:** "the return-trained head is a well-behaved quantile estimator before calibration".
+- **Methods text:** state that early stopping uses the last 15% of each training period, chronologically.
 
 ## What to do next
 

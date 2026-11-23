@@ -1,0 +1,1148 @@
+{
+  "preregistered_checks_leakage_free": {
+    "1_rolling_recalibration_pattern": true,
+    "1_rolling_verdicts": {
+      "fold1_gfc": "FAIL",
+      "fold2_eu_crisis": "PASS",
+      "fold3_2015_selloff": "PASS",
+      "fold4_covid": "PASS",
+      "fold5_2022_bear": "PASS"
+    },
+    "2_no_single_static_L": true,
+    "2_gfc_rescued_at_L40": true,
+    "2_regressed_at_L40": [
+      "fold4_covid"
+    ],
+    "2_window_lengths_passing_every_fold": [],
+    "3_monitor_shock_vs_grind": true,
+    "3_shock_elevated_above_normal": {
+      "fold1_gfc": true,
+      "fold4_covid": true
+    },
+    "3_grind_elevated_above_normal": {
+      "fold2_eu_crisis": false,
+      "fold3_2015_selloff": false
+    }
+  },
+  "checks_by_source": {
+    "leakage_free_model": {
+      "1_rolling_recalibration_pattern": true,
+      "1_rolling_verdicts": {
+        "fold1_gfc": "FAIL",
+        "fold2_eu_crisis": "PASS",
+        "fold3_2015_selloff": "PASS",
+        "fold4_covid": "PASS",
+        "fold5_2022_bear": "PASS"
+      },
+      "2_no_single_static_L": true,
+      "2_gfc_rescued_at_L40": true,
+      "2_regressed_at_L40": [
+        "fold4_covid"
+      ],
+      "2_window_lengths_passing_every_fold": [],
+      "3_monitor_shock_vs_grind": true,
+      "3_shock_elevated_above_normal": {
+        "fold1_gfc": true,
+        "fold4_covid": true
+      },
+      "3_grind_elevated_above_normal": {
+        "fold2_eu_crisis": false,
+        "fold3_2015_selloff": false
+      }
+    },
+    "original_model": {
+      "1_rolling_recalibration_pattern": true,
+      "1_rolling_verdicts": {
+        "fold1_gfc": "FAIL",
+        "fold2_eu_crisis": "PASS",
+        "fold3_2015_selloff": "PASS",
+        "fold4_covid": "PASS",
+        "fold5_2022_bear": "PASS"
+      },
+      "2_no_single_static_L": true,
+      "2_gfc_rescued_at_L40": true,
+      "2_regressed_at_L40": [
+        "fold3_2015_selloff",
+        "fold4_covid"
+      ],
+      "2_window_lengths_passing_every_fold": [],
+      "3_monitor_shock_vs_grind": true,
+      "3_shock_elevated_above_normal": {
+        "fold1_gfc": true,
+        "fold4_covid": true
+      },
+      "3_grind_elevated_above_normal": {
+        "fold2_eu_crisis": false,
+        "fold3_2015_selloff": false
+      }
+    },
+    "raw_target": {
+      "1_rolling_recalibration_pattern": true,
+      "1_rolling_verdicts": {
+        "fold1_gfc": "FAIL",
+        "fold2_eu_crisis": "PASS",
+        "fold3_2015_selloff": "PASS",
+        "fold4_covid": "PASS",
+        "fold5_2022_bear": "PASS"
+      },
+      "2_no_single_static_L": true,
+      "2_gfc_rescued_at_L40": true,
+      "2_regressed_at_L40": [
+        "fold4_covid"
+      ],
+      "2_window_lengths_passing_every_fold": [],
+      "3_monitor_shock_vs_grind": false,
+      "3_shock_elevated_above_normal": {
+        "fold1_gfc": false,
+        "fold4_covid": true
+      },
+      "3_grind_elevated_above_normal": {
+        "fold2_eu_crisis": false,
+        "fold3_2015_selloff": false
+      }
+    }
+  },
+  "verdict_agreement": {
+    "leakage_free_model_vs_original_model": {
+      "agree": 22,
+      "cells": 25,
+      "differing": [
+        "fold3_2015_selloff@L=40",
+        "fold3_2015_selloff@L=175",
+        "fold4_covid@L=90"
+      ]
+    },
+    "leakage_free_model_vs_raw_target": {
+      "agree": 24,
+      "cells": 25,
+      "differing": [
+        "fold4_covid@L=90"
+      ]
+    },
+    "original_model_vs_raw_target": {
+      "agree": 23,
+      "cells": 25,
+      "differing": [
+        "fold3_2015_selloff@L=40",
+        "fold3_2015_selloff@L=175"
+      ]
+    }
+  },
+  "results": {
+    "fold1_gfc": {
+      "leakage_free_model": {
+        "40": {
+          "coverage": 0.04780876494023904,
+          "kupiec_p": 0.8725583866101684,
+          "breaches": 12,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.056338028169014086,
+            "normal_breach_rate": 0.07547169811320754,
+            "breach_preceded_by_elevated_rate": 0.5625,
+            "baseline_preceded_by_elevated_rate": 0.4592074592074592
+          }
+        },
+        "60": {
+          "coverage": 0.02390438247011952,
+          "kupiec_p": 0.03546257138952877,
+          "breaches": 6,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.06779661016949153,
+            "normal_breach_rate": 0.04182509505703422,
+            "breach_preceded_by_elevated_rate": 0.5652173913043478,
+            "baseline_preceded_by_elevated_rate": 0.5526315789473685
+          }
+        },
+        "90": {
+          "coverage": 0.0199203187250996,
+          "kupiec_p": 0.013262580616093558,
+          "breaches": 5,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07179487179487179,
+            "normal_breach_rate": 0.06046511627906977,
+            "breach_preceded_by_elevated_rate": 0.6296296296296297,
+            "baseline_preceded_by_elevated_rate": 0.6276041666666666
+          }
+        },
+        "125": {
+          "coverage": 0.00796812749003984,
+          "kupiec_p": 0.0001631742228757681,
+          "breaches": 2,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07048458149779736,
+            "normal_breach_rate": 0.05405405405405406,
+            "breach_preceded_by_elevated_rate": 0.8333333333333334,
+            "baseline_preceded_by_elevated_rate": 0.7102272727272727
+          }
+        },
+        "175": {
+          "coverage": 0.0,
+          "kupiec_p": 3.887813348760835e-07,
+          "breaches": 0,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.04878048780487805,
+            "normal_breach_rate": 0.0379746835443038,
+            "breach_preceded_by_elevated_rate": 0.9375,
+            "baseline_preceded_by_elevated_rate": 0.8354838709677419
+          }
+        }
+      },
+      "original_model": {
+        "40": {
+          "coverage": 0.04780876494023904,
+          "kupiec_p": 0.8725583866101684,
+          "breaches": 12,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.056338028169014086,
+            "normal_breach_rate": 0.07547169811320754,
+            "breach_preceded_by_elevated_rate": 0.5625,
+            "baseline_preceded_by_elevated_rate": 0.4592074592074592
+          }
+        },
+        "60": {
+          "coverage": 0.02390438247011952,
+          "kupiec_p": 0.03546257138952877,
+          "breaches": 6,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07344632768361582,
+            "normal_breach_rate": 0.04182509505703422,
+            "breach_preceded_by_elevated_rate": 0.5833333333333334,
+            "baseline_preceded_by_elevated_rate": 0.5515587529976019
+          }
+        },
+        "90": {
+          "coverage": 0.0199203187250996,
+          "kupiec_p": 0.013262580616093558,
+          "breaches": 5,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07179487179487179,
+            "normal_breach_rate": 0.06046511627906977,
+            "breach_preceded_by_elevated_rate": 0.6296296296296297,
+            "baseline_preceded_by_elevated_rate": 0.6276041666666666
+          }
+        },
+        "125": {
+          "coverage": 0.00796812749003984,
+          "kupiec_p": 0.0001631742228757681,
+          "breaches": 2,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07048458149779736,
+            "normal_breach_rate": 0.0472972972972973,
+            "breach_preceded_by_elevated_rate": 0.8695652173913043,
+            "baseline_preceded_by_elevated_rate": 0.7082152974504249
+          }
+        },
+        "175": {
+          "coverage": 0.0,
+          "kupiec_p": 3.887813348760835e-07,
+          "breaches": 0,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.04878048780487805,
+            "normal_breach_rate": 0.0379746835443038,
+            "breach_preceded_by_elevated_rate": 0.9375,
+            "baseline_preceded_by_elevated_rate": 0.8354838709677419
+          }
+        }
+      },
+      "raw_target": {
+        "40": {
+          "coverage": 0.03187250996015936,
+          "kupiec_p": 0.15920005300028836,
+          "breaches": 8,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.07042253521126761,
+            "normal_breach_rate": 0.059748427672955975,
+            "breach_preceded_by_elevated_rate": 0.5172413793103449,
+            "baseline_preceded_by_elevated_rate": 0.46296296296296297
+          }
+        },
+        "60": {
+          "coverage": 0.02390438247011952,
+          "kupiec_p": 0.03546257138952877,
+          "breaches": 6,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.05649717514124294,
+            "normal_breach_rate": 0.045627376425855515,
+            "breach_preceded_by_elevated_rate": 0.5,
+            "baseline_preceded_by_elevated_rate": 0.5560859188544153
+          }
+        },
+        "90": {
+          "coverage": 0.0199203187250996,
+          "kupiec_p": 0.013262580616093558,
+          "breaches": 5,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.06153846153846154,
+            "normal_breach_rate": 0.06976744186046512,
+            "breach_preceded_by_elevated_rate": 0.5555555555555556,
+            "baseline_preceded_by_elevated_rate": 0.6328125
+          }
+        },
+        "125": {
+          "coverage": 0.00796812749003984,
+          "kupiec_p": 0.0001631742228757681,
+          "breaches": 2,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.05726872246696035,
+            "normal_breach_rate": 0.060810810810810814,
+            "breach_preceded_by_elevated_rate": 0.7272727272727273,
+            "baseline_preceded_by_elevated_rate": 0.7175141242937854
+          }
+        },
+        "175": {
+          "coverage": 0.01195219123505976,
+          "kupiec_p": 0.0009664182386925363,
+          "breaches": 3,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.052845528455284556,
+            "normal_breach_rate": 0.05063291139240506,
+            "breach_preceded_by_elevated_rate": 0.9444444444444444,
+            "baseline_preceded_by_elevated_rate": 0.8344155844155844
+          }
+        }
+      }
+    },
+    "fold2_eu_crisis": {
+      "leakage_free_model": {
+        "40": {
+          "coverage": 0.056,
+          "kupiec_p": 0.6006309553063343,
+          "breaches": 21,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.0365296803652968,
+            "normal_breach_rate": 0.08163265306122448,
+            "breach_preceded_by_elevated_rate": 0.3125,
+            "baseline_preceded_by_elevated_rate": 0.47583081570996977
+          }
+        },
+        "60": {
+          "coverage": 0.04533333333333334,
+          "kupiec_p": 0.6737485209711764,
+          "breaches": 17,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.04132231404958678,
+            "normal_breach_rate": 0.06487695749440715,
+            "breach_preceded_by_elevated_rate": 0.4358974358974359,
+            "baseline_preceded_by_elevated_rate": 0.5360983102918587
+          }
+        },
+        "90": {
+          "coverage": 0.04533333333333334,
+          "kupiec_p": 0.6737485209711764,
+          "breaches": 17,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.04583333333333333,
+            "normal_breach_rate": 0.06443914081145585,
+            "breach_preceded_by_elevated_rate": 0.47368421052631576,
+            "baseline_preceded_by_elevated_rate": 0.5273311897106109
+          }
+        },
+        "125": {
+          "coverage": 0.042666666666666665,
+          "kupiec_p": 0.5043301767593933,
+          "breaches": 16,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.03225806451612903,
+            "normal_breach_rate": 0.07180851063829788,
+            "breach_preceded_by_elevated_rate": 0.34285714285714286,
+            "baseline_preceded_by_elevated_rate": 0.5423728813559322
+          }
+        },
+        "175": {
+          "coverage": 0.04533333333333334,
+          "kupiec_p": 0.6737485209711764,
+          "breaches": 17,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.01702127659574468,
+            "normal_breach_rate": 0.06784660766961652,
+            "breach_preceded_by_elevated_rate": 0.4444444444444444,
+            "baseline_preceded_by_elevated_rate": 0.5656934306569343
+          }
+        }
+      },
+      "original_model": {
+        "40": {
+          "coverage": 0.05333333333333334,
+          "kupiec_p": 0.7694139836446807,
+          "breaches": 20,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.0319634703196347,
+            "normal_breach_rate": 0.07959183673469387,
+            "breach_preceded_by_elevated_rate": 0.30434782608695654,
+            "baseline_preceded_by_elevated_rate": 0.4759036144578313
+          }
+        },
+        "60": {
+          "coverage": 0.048,
+          "kupiec_p": 0.8580583041324468,
+          "breaches": 18,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.045454545454545456,
+            "normal_breach_rate": 0.06487695749440715,
+            "breach_preceded_by_elevated_rate": 0.45,
+            "baseline_preceded_by_elevated_rate": 0.5353846153846153
+          }
+        },
+        "90": {
+          "coverage": 0.04533333333333334,
+          "kupiec_p": 0.6737485209711764,
+          "breaches": 17,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.04583333333333333,
+            "normal_breach_rate": 0.06443914081145585,
+            "breach_preceded_by_elevated_rate": 0.5,
+            "baseline_preceded_by_elevated_rate": 0.5257234726688103
+          }
+        },
+        "125": {
+          "coverage": 0.04,
+          "kupiec_p": 0.35796232015889007,
+          "breaches": 15,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.036290322580645164,
+            "normal_breach_rate": 0.07180851063829788,
+            "breach_preceded_by_elevated_rate": 0.3333333333333333,
+            "baseline_preceded_by_elevated_rate": 0.5432937181663837
+          }
+        },
+        "175": {
+          "coverage": 0.042666666666666665,
+          "kupiec_p": 0.5043301767593933,
+          "breaches": 16,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.01702127659574468,
+            "normal_breach_rate": 0.06784660766961652,
+            "breach_preceded_by_elevated_rate": 0.4444444444444444,
+            "baseline_preceded_by_elevated_rate": 0.5656934306569343
+          }
+        }
+      },
+      "raw_target": {
+        "40": {
+          "coverage": 0.06133333333333333,
+          "kupiec_p": 0.33004381853932074,
+          "breaches": 23,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.0273972602739726,
+            "normal_breach_rate": 0.08571428571428572,
+            "breach_preceded_by_elevated_rate": 0.2916666666666667,
+            "baseline_preceded_by_elevated_rate": 0.4773413897280967
+          }
+        },
+        "60": {
+          "coverage": 0.058666666666666666,
+          "kupiec_p": 0.4530209003238336,
+          "breaches": 22,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.045454545454545456,
+            "normal_breach_rate": 0.07606263982102908,
+            "breach_preceded_by_elevated_rate": 0.4444444444444444,
+            "baseline_preceded_by_elevated_rate": 0.5364341085271318
+          }
+        },
+        "90": {
+          "coverage": 0.04533333333333334,
+          "kupiec_p": 0.6737485209711764,
+          "breaches": 17,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.03333333333333333,
+            "normal_breach_rate": 0.07398568019093078,
+            "breach_preceded_by_elevated_rate": 0.46153846153846156,
+            "baseline_preceded_by_elevated_rate": 0.5281803542673108
+          }
+        },
+        "125": {
+          "coverage": 0.04,
+          "kupiec_p": 0.35796232015889007,
+          "breaches": 15,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.03225806451612903,
+            "normal_breach_rate": 0.07180851063829788,
+            "breach_preceded_by_elevated_rate": 0.3142857142857143,
+            "baseline_preceded_by_elevated_rate": 0.5440677966101695
+          }
+        },
+        "175": {
+          "coverage": 0.042666666666666665,
+          "kupiec_p": 0.5043301767593933,
+          "breaches": 16,
+          "n": 375,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.01276595744680851,
+            "normal_breach_rate": 0.07079646017699115,
+            "breach_preceded_by_elevated_rate": 0.3333333333333333,
+            "baseline_preceded_by_elevated_rate": 0.5711678832116789
+          }
+        }
+      }
+    },
+    "fold3_2015_selloff": {
+      "leakage_free_model": {
+        "40": {
+          "coverage": 0.06914893617021277,
+          "kupiec_p": 0.10642127664342375,
+          "breaches": 26,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.07169811320754717,
+            "normal_breach_rate": 0.07191011235955057,
+            "breach_preceded_by_elevated_rate": 0.5294117647058824,
+            "baseline_preceded_by_elevated_rate": 0.5409090909090909
+          }
+        },
+        "60": {
+          "coverage": 0.061170212765957445,
+          "kupiec_p": 0.3361925298466085,
+          "breaches": 23,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.03873239436619718,
+            "normal_breach_rate": 0.07635467980295567,
+            "breach_preceded_by_elevated_rate": 0.38095238095238093,
+            "baseline_preceded_by_elevated_rate": 0.5839753466872111
+          }
+        },
+        "90": {
+          "coverage": 0.05053191489361702,
+          "kupiec_p": 0.9623173931876493,
+          "breaches": 19,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.030508474576271188,
+            "normal_breach_rate": 0.06027397260273973,
+            "breach_preceded_by_elevated_rate": 0.45161290322580644,
+            "baseline_preceded_by_elevated_rate": 0.6
+          }
+        },
+        "125": {
+          "coverage": 0.0425531914893617,
+          "kupiec_p": 0.49701208037630196,
+          "breaches": 16,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.033210332103321034,
+            "normal_breach_rate": 0.059322033898305086,
+            "breach_preceded_by_elevated_rate": 0.5666666666666667,
+            "baseline_preceded_by_elevated_rate": 0.6040268456375839
+          }
+        },
+        "175": {
+          "coverage": 0.031914893617021274,
+          "kupiec_p": 0.08567417465601065,
+          "breaches": 12,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.022304832713754646,
+            "normal_breach_rate": 0.05228758169934641,
+            "breach_preceded_by_elevated_rate": 0.5217391304347826,
+            "baseline_preceded_by_elevated_rate": 0.6148282097649186
+          }
+        }
+      },
+      "original_model": {
+        "40": {
+          "coverage": 0.07446808510638298,
+          "kupiec_p": 0.041721097699725374,
+          "breaches": 28,
+          "n": 376,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07547169811320754,
+            "normal_breach_rate": 0.07191011235955057,
+            "breach_preceded_by_elevated_rate": 0.5576923076923077,
+            "baseline_preceded_by_elevated_rate": 0.5386949924127465
+          }
+        },
+        "60": {
+          "coverage": 0.06648936170212766,
+          "kupiec_p": 0.16159990611585434,
+          "breaches": 25,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.045774647887323945,
+            "normal_breach_rate": 0.07881773399014778,
+            "breach_preceded_by_elevated_rate": 0.4,
+            "baseline_preceded_by_elevated_rate": 0.5835913312693498
+          }
+        },
+        "90": {
+          "coverage": 0.04521276595744681,
+          "kupiec_p": 0.6652779166839524,
+          "breaches": 17,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.030508474576271188,
+            "normal_breach_rate": 0.06301369863013699,
+            "breach_preceded_by_elevated_rate": 0.4375,
+            "baseline_preceded_by_elevated_rate": 0.6009538950715422
+          }
+        },
+        "125": {
+          "coverage": 0.03723404255319149,
+          "kupiec_p": 0.23508502169990309,
+          "breaches": 14,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.03690036900369004,
+            "normal_breach_rate": 0.05367231638418079,
+            "breach_preceded_by_elevated_rate": 0.5517241379310345,
+            "baseline_preceded_by_elevated_rate": 0.6046901172529313
+          }
+        },
+        "175": {
+          "coverage": 0.02925531914893617,
+          "kupiec_p": 0.04609982226457007,
+          "breaches": 11,
+          "n": 376,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.01858736059479554,
+            "normal_breach_rate": 0.05228758169934641,
+            "breach_preceded_by_elevated_rate": 0.4090909090909091,
+            "baseline_preceded_by_elevated_rate": 0.6191335740072202
+          }
+        }
+      },
+      "raw_target": {
+        "40": {
+          "coverage": 0.07180851063829788,
+          "kupiec_p": 0.06775370097694164,
+          "breaches": 27,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.07169811320754717,
+            "normal_breach_rate": 0.07191011235955057,
+            "breach_preceded_by_elevated_rate": 0.5294117647058824,
+            "baseline_preceded_by_elevated_rate": 0.5409090909090909
+          }
+        },
+        "60": {
+          "coverage": 0.06382978723404255,
+          "kupiec_p": 0.23713856928401084,
+          "breaches": 24,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.045774647887323945,
+            "normal_breach_rate": 0.0812807881773399,
+            "breach_preceded_by_elevated_rate": 0.41304347826086957,
+            "baseline_preceded_by_elevated_rate": 0.5829457364341085
+          }
+        },
+        "90": {
+          "coverage": 0.05053191489361702,
+          "kupiec_p": 0.9623173931876493,
+          "breaches": 19,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.030508474576271188,
+            "normal_breach_rate": 0.0684931506849315,
+            "breach_preceded_by_elevated_rate": 0.4117647058823529,
+            "baseline_preceded_by_elevated_rate": 0.6028708133971292
+          }
+        },
+        "125": {
+          "coverage": 0.0398936170212766,
+          "kupiec_p": 0.3520420220105309,
+          "breaches": 15,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.03690036900369004,
+            "normal_breach_rate": 0.05649717514124294,
+            "breach_preceded_by_elevated_rate": 0.5666666666666667,
+            "baseline_preceded_by_elevated_rate": 0.6040268456375839
+          }
+        },
+        "175": {
+          "coverage": 0.034574468085106384,
+          "kupiec_p": 0.14709929905295452,
+          "breaches": 13,
+          "n": 376,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.01858736059479554,
+            "normal_breach_rate": 0.058823529411764705,
+            "breach_preceded_by_elevated_rate": 0.375,
+            "baseline_preceded_by_elevated_rate": 0.6213768115942029
+          }
+        }
+      }
+    },
+    "fold4_covid": {
+      "leakage_free_model": {
+        "40": {
+          "coverage": 0.09561752988047809,
+          "kupiec_p": 0.0030474808679150193,
+          "breaches": 24,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.08996539792387544,
+            "normal_breach_rate": 0.06432748538011696,
+            "breach_preceded_by_elevated_rate": 0.8157894736842105,
+            "baseline_preceded_by_elevated_rate": 0.7706855791962175
+          }
+        },
+        "60": {
+          "coverage": 0.09561752988047809,
+          "kupiec_p": 0.0030474808679150193,
+          "breaches": 24,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07777777777777778,
+            "normal_breach_rate": 0.08823529411764706,
+            "breach_preceded_by_elevated_rate": 0.75,
+            "baseline_preceded_by_elevated_rate": 0.7382716049382716
+          }
+        },
+        "90": {
+          "coverage": 0.07171314741035857,
+          "kupiec_p": 0.1372107676037482,
+          "breaches": 18,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.06324110671936758,
+            "normal_breach_rate": 0.06369426751592357,
+            "breach_preceded_by_elevated_rate": 0.8076923076923077,
+            "baseline_preceded_by_elevated_rate": 0.7090909090909091
+          }
+        },
+        "125": {
+          "coverage": 0.07171314741035857,
+          "kupiec_p": 0.1372107676037482,
+          "breaches": 18,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.06844106463878327,
+            "normal_breach_rate": 0.05357142857142857,
+            "breach_preceded_by_elevated_rate": 0.9583333333333334,
+            "baseline_preceded_by_elevated_rate": 0.8011363636363636
+          }
+        },
+        "175": {
+          "coverage": 0.07171314741035857,
+          "kupiec_p": 0.1372107676037482,
+          "breaches": 18,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.06349206349206349,
+            "normal_breach_rate": 0.0547945205479452,
+            "breach_preceded_by_elevated_rate": 1.0,
+            "baseline_preceded_by_elevated_rate": 0.8529411764705882
+          }
+        }
+      },
+      "original_model": {
+        "40": {
+          "coverage": 0.09561752988047809,
+          "kupiec_p": 0.0030474808679150193,
+          "breaches": 24,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.09342560553633218,
+            "normal_breach_rate": 0.07017543859649122,
+            "breach_preceded_by_elevated_rate": 0.8205128205128205,
+            "baseline_preceded_by_elevated_rate": 0.7701421800947867
+          }
+        },
+        "60": {
+          "coverage": 0.099601593625498,
+          "kupiec_p": 0.0013896968134045299,
+          "breaches": 25,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.08148148148148149,
+            "normal_breach_rate": 0.09411764705882353,
+            "breach_preceded_by_elevated_rate": 0.7368421052631579,
+            "baseline_preceded_by_elevated_rate": 0.739454094292804
+          }
+        },
+        "90": {
+          "coverage": 0.08366533864541832,
+          "kupiec_p": 0.024987966212674007,
+          "breaches": 21,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.08300395256916997,
+            "normal_breach_rate": 0.05732484076433121,
+            "breach_preceded_by_elevated_rate": 0.8,
+            "baseline_preceded_by_elevated_rate": 0.7086614173228346
+          }
+        },
+        "125": {
+          "coverage": 0.07569721115537849,
+          "kupiec_p": 0.08146841556836093,
+          "breaches": 19,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.07984790874524715,
+            "normal_breach_rate": 0.044642857142857144,
+            "breach_preceded_by_elevated_rate": 0.9615384615384616,
+            "baseline_preceded_by_elevated_rate": 0.8
+          }
+        },
+        "175": {
+          "coverage": 0.07171314741035857,
+          "kupiec_p": 0.1372107676037482,
+          "breaches": 18,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.06746031746031746,
+            "normal_breach_rate": 0.0547945205479452,
+            "breach_preceded_by_elevated_rate": 1.0,
+            "baseline_preceded_by_elevated_rate": 0.8524590163934426
+          }
+        }
+      },
+      "raw_target": {
+        "40": {
+          "coverage": 0.09163346613545817,
+          "kupiec_p": 0.006413136597598073,
+          "breaches": 23,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.09342560553633218,
+            "normal_breach_rate": 0.05263157894736842,
+            "breach_preceded_by_elevated_rate": 0.8333333333333334,
+            "baseline_preceded_by_elevated_rate": 0.7694117647058824
+          }
+        },
+        "60": {
+          "coverage": 0.099601593625498,
+          "kupiec_p": 0.0013896968134045299,
+          "breaches": 25,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.07777777777777778,
+            "normal_breach_rate": 0.08823529411764706,
+            "breach_preceded_by_elevated_rate": 0.7222222222222222,
+            "baseline_preceded_by_elevated_rate": 0.7407407407407407
+          }
+        },
+        "90": {
+          "coverage": 0.0796812749003984,
+          "kupiec_p": 0.046161517602920234,
+          "breaches": 20,
+          "n": 251,
+          "verdict": "FAIL",
+          "monitor": {
+            "elevated_breach_rate": 0.08300395256916997,
+            "normal_breach_rate": 0.050955414012738856,
+            "breach_preceded_by_elevated_rate": 0.8620689655172413,
+            "baseline_preceded_by_elevated_rate": 0.7041884816753927
+          }
+        },
+        "125": {
+          "coverage": 0.07569721115537849,
+          "kupiec_p": 0.08146841556836093,
+          "breaches": 19,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.07984790874524715,
+            "normal_breach_rate": 0.05357142857142857,
+            "breach_preceded_by_elevated_rate": 0.9629629629629629,
+            "baseline_preceded_by_elevated_rate": 0.7994269340974212
+          }
+        },
+        "175": {
+          "coverage": 0.07171314741035857,
+          "kupiec_p": 0.1372107676037482,
+          "breaches": 18,
+          "n": 251,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.06349206349206349,
+            "normal_breach_rate": 0.0684931506849315,
+            "breach_preceded_by_elevated_rate": 1.0,
+            "baseline_preceded_by_elevated_rate": 0.8524590163934426
+          }
+        }
+      }
+    },
+    "fold5_2022_bear": {
+      "leakage_free_model": {
+        "40": {
+          "coverage": 0.04032258064516129,
+          "kupiec_p": 0.6093866769445073,
+          "breaches": 5,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.09090909090909091,
+            "normal_breach_rate": 0.05202312138728324,
+            "breach_preceded_by_elevated_rate": 0.4166666666666667,
+            "baseline_preceded_by_elevated_rate": 0.3487179487179487
+          }
+        },
+        "60": {
+          "coverage": 0.04838709677419355,
+          "kupiec_p": 0.9339834324692619,
+          "breaches": 6,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.05555555555555555,
+            "normal_breach_rate": 0.07333333333333333,
+            "breach_preceded_by_elevated_rate": 0.38461538461538464,
+            "baseline_preceded_by_elevated_rate": 0.40804597701149425
+          }
+        },
+        "90": {
+          "coverage": 0.04032258064516129,
+          "kupiec_p": 0.6093866769445073,
+          "breaches": 5,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.09090909090909091,
+            "normal_breach_rate": 0.029850746268656716,
+            "breach_preceded_by_elevated_rate": 0.14285714285714285,
+            "baseline_preceded_by_elevated_rate": 0.31333333333333335
+          }
+        },
+        "125": {
+          "coverage": 0.03278688524590164,
+          "kupiec_p": 0.3532167485370572,
+          "breaches": 4,
+          "n": 122,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.047619047619047616,
+            "normal_breach_rate": 0.03,
+            "breach_preceded_by_elevated_rate": 0.25,
+            "baseline_preceded_by_elevated_rate": 0.3559322033898305
+          }
+        },
+        "175": {
+          "coverage": 0.027777777777777776,
+          "kupiec_p": 0.346565814008833,
+          "breaches": 2,
+          "n": 72,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.14285714285714285,
+            "normal_breach_rate": 0.015625,
+            "breach_preceded_by_elevated_rate": 0.0,
+            "baseline_preceded_by_elevated_rate": 0.3142857142857143
+          }
+        }
+      },
+      "original_model": {
+        "40": {
+          "coverage": 0.056451612903225805,
+          "kupiec_p": 0.7464980537018733,
+          "breaches": 7,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.06060606060606061,
+            "normal_breach_rate": 0.06358381502890173,
+            "breach_preceded_by_elevated_rate": 0.38461538461538464,
+            "baseline_preceded_by_elevated_rate": 0.35051546391752575
+          }
+        },
+        "60": {
+          "coverage": 0.04032258064516129,
+          "kupiec_p": 0.6093866769445073,
+          "breaches": 5,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.027777777777777776,
+            "normal_breach_rate": 0.07333333333333333,
+            "breach_preceded_by_elevated_rate": 0.4166666666666667,
+            "baseline_preceded_by_elevated_rate": 0.4057142857142857
+          }
+        },
+        "90": {
+          "coverage": 0.03225806451612903,
+          "kupiec_p": 0.33362036803647677,
+          "breaches": 4,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.09090909090909091,
+            "normal_breach_rate": 0.029850746268656716,
+            "breach_preceded_by_elevated_rate": 0.14285714285714285,
+            "baseline_preceded_by_elevated_rate": 0.31333333333333335
+          }
+        },
+        "125": {
+          "coverage": 0.02459016393442623,
+          "kupiec_p": 0.15481778025191553,
+          "breaches": 3,
+          "n": 122,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.0,
+            "normal_breach_rate": 0.03,
+            "breach_preceded_by_elevated_rate": 0.3333333333333333,
+            "baseline_preceded_by_elevated_rate": 0.35294117647058826
+          }
+        },
+        "175": {
+          "coverage": 0.013888888888888888,
+          "kupiec_p": 0.09812642237437023,
+          "breaches": 1,
+          "n": 72,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.0,
+            "normal_breach_rate": 0.015625,
+            "breach_preceded_by_elevated_rate": 0.0,
+            "baseline_preceded_by_elevated_rate": 0.30985915492957744
+          }
+        }
+      },
+      "raw_target": {
+        "40": {
+          "coverage": 0.056451612903225805,
+          "kupiec_p": 0.7464980537018733,
+          "breaches": 7,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.06060606060606061,
+            "normal_breach_rate": 0.06358381502890173,
+            "breach_preceded_by_elevated_rate": 0.38461538461538464,
+            "baseline_preceded_by_elevated_rate": 0.35051546391752575
+          }
+        },
+        "60": {
+          "coverage": 0.04838709677419355,
+          "kupiec_p": 0.9339834324692619,
+          "breaches": 6,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.05555555555555555,
+            "normal_breach_rate": 0.07333333333333333,
+            "breach_preceded_by_elevated_rate": 0.38461538461538464,
+            "baseline_preceded_by_elevated_rate": 0.40804597701149425
+          }
+        },
+        "90": {
+          "coverage": 0.04032258064516129,
+          "kupiec_p": 0.6093866769445073,
+          "breaches": 5,
+          "n": 124,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.09090909090909091,
+            "normal_breach_rate": 0.029850746268656716,
+            "breach_preceded_by_elevated_rate": 0.14285714285714285,
+            "baseline_preceded_by_elevated_rate": 0.31333333333333335
+          }
+        },
+        "125": {
+          "coverage": 0.040983606557377046,
+          "kupiec_p": 0.6375970922195058,
+          "breaches": 5,
+          "n": 122,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.047619047619047616,
+            "normal_breach_rate": 0.04,
+            "breach_preceded_by_elevated_rate": 0.2,
+            "baseline_preceded_by_elevated_rate": 0.358974358974359
+          }
+        },
+        "175": {
+          "coverage": 0.027777777777777776,
+          "kupiec_p": 0.346565814008833,
+          "breaches": 2,
+          "n": 72,
+          "verdict": "PASS",
+          "monitor": {
+            "elevated_breach_rate": 0.0,
+            "normal_breach_rate": 0.03125,
+            "breach_preceded_by_elevated_rate": 0.0,
+            "baseline_preceded_by_elevated_rate": 0.3142857142857143
+          }
+        }
+      }
+    }
+  }
+}

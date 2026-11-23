@@ -89,10 +89,15 @@ def build_transformer_model(seq_len, n_features):
     return Model(inp, [out_mu, out_vol, out_yz, out_var, out_cvar])
 
 
-def train_model(X_train, y_train_z, X_test, y_test_z, n_features,
+def train_model(X_fit, y_fit_z, X_val, y_val_z, n_features,
                 seq_len=SEQUENCE_LENGTH, targets=TARGETS, loss_fn=weighted_loss,
                 learning_rate=1e-4, batch_size=32, max_epochs=50, patience=5):
     """The manual GradientTape training loop, lifted out of `run_fold` unchanged.
+
+    `X_val`/`y_val_z` are used only for early stopping and best-weight restoration. They must
+    come from the training period: call this through `fit_with_train_tail_validation`, which
+    takes no test-window argument at all. Until RESULTS.md section 15 every caller passed the
+    fold's test window here.
 
     Builds the model as its first action so the RNG state at initialisation matches the
     original inline version - callers must `set_seeds()` immediately before, with nothing
@@ -103,10 +108,10 @@ def train_model(X_train, y_train_z, X_test, y_test_z, n_features,
     optimizer = tf.keras.optimizers.Adam(learning_rate)
 
     train_ds = tf.data.Dataset.from_tensor_slices(
-        (X_train, {t: tf.cast(y_train_z[t], tf.float32) for t in targets})
+        (X_fit, {t: tf.cast(y_fit_z[t], tf.float32) for t in targets})
     ).batch(batch_size)
     val_ds = tf.data.Dataset.from_tensor_slices(
-        (X_test, {t: tf.cast(y_test_z[t], tf.float32) for t in targets})
+        (X_val, {t: tf.cast(y_val_z[t], tf.float32) for t in targets})
     ).batch(batch_size)
 
     best_val_loss = float('inf')
@@ -141,3 +146,103 @@ def train_model(X_train, y_train_z, X_test, y_test_z, n_features,
 
     model.set_weights(best_weights)
     return model, epochs_run, best_val_loss
+
+
+def build_single_task_model(seq_len, n_features):
+    """Identical transformer body, one Dense(1) head. Copied unchanged from
+    scripts/single_task_var_ablation.py so package code does not import from scripts/."""
+    inp = Input(shape=(seq_len, n_features))
+    x = layers.Dense(64, activation=None)(inp)
+    for _ in range(4):
+        x = transformer_block(x)
+    x = layers.GlobalAveragePooling1D()(x)
+    out_var = layers.Dense(1, name="VaR_5")(x)
+    return Model(inp, out_var)
+
+
+def train_single_task(X_fit, y_fit_z, X_val, y_val_z, n_features,
+                      batch_size=32, max_epochs=50, patience=5):
+    """Single-head pinball-loss (q=0.05) loop, unchanged from
+    scripts/single_task_var_ablation.train_single_task apart from parameter names. Like the
+    original it clears the session and seeds (seed 42) itself. `X_val` is for early stopping
+    only and must come from the training period."""
+    from .seeding import set_seeds
+
+    tf.keras.backend.clear_session()
+    set_seeds()
+
+    model = build_single_task_model(SEQUENCE_LENGTH, n_features)
+    optimizer = tf.keras.optimizers.Adam(1e-4)
+
+    fit_ds = tf.data.Dataset.from_tensor_slices((X_fit, tf.cast(y_fit_z, tf.float32))).batch(batch_size)
+    val_ds = tf.data.Dataset.from_tensor_slices((X_val, tf.cast(y_val_z, tf.float32))).batch(batch_size)
+
+    best_val_loss = float('inf')
+    wait = 0
+    best_weights = None
+    epochs_run = 0
+
+    for epoch in range(max_epochs):
+        for xb, yb in fit_ds:
+            with tf.GradientTape() as tape:
+                pred = tf.squeeze(model(xb, training=True), axis=-1)
+                loss = quantile_loss_05(yb, pred)
+            grads = tape.gradient(loss, model.trainable_variables)
+            optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+        val_losses = []
+        for xb, yb in val_ds:
+            pred = tf.squeeze(model(xb, training=False), axis=-1)
+            val_losses.append(float(quantile_loss_05(yb, pred)))
+        val_loss = float(np.mean(val_losses))
+        epochs_run = epoch + 1
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            best_weights = model.get_weights()
+            wait = 0
+        else:
+            wait += 1
+            if wait >= patience:
+                break
+
+    model.set_weights(best_weights)
+    return model, epochs_run, best_val_loss
+
+
+# Share of each fold's training sequences, taken from the chronological END, held out for early
+# stopping. Fixed at 0.15 before any clean-validation result existed (RESULTS.md section 15).
+VAL_FRACTION = 0.15
+
+
+def chronological_val_split(X, y, val_fraction=VAL_FRACTION):
+    """Split training sequences into (fit, validation) by time: the last `val_fraction` of
+    sequences become the validation set. No shuffling. `y` is an array or a dict of arrays
+    aligned with X. Returns X_fit, y_fit, X_val, y_val."""
+    n = len(X)
+    n_val = int(round(n * val_fraction))
+    if not 0 < n_val < n:
+        raise ValueError(f"validation split of {n_val} from {n} sequences is empty or total")
+    cut = n - n_val
+    for a in (y.values() if isinstance(y, dict) else [y]):
+        assert len(a) == n, "targets must align with sequences"
+
+    def part(a, sl):
+        return {k: v[sl] for k, v in a.items()} if isinstance(a, dict) else a[sl]
+
+    return X[:cut], part(y, slice(None, cut)), X[cut:], part(y, slice(cut, None))
+
+
+def fit_with_train_tail_validation(X_train, y_train_z, n_features, trainer=None,
+                                   val_fraction=VAL_FRACTION):
+    """Train with early stopping on the chronological tail of the TRAINING sequences.
+
+    The only training entry point the pipeline uses. It takes no test-window argument, so the
+    test window cannot reach the training loop, early stopping or best-weight restoration
+    (tests/test_no_test_window_in_training.py). Returns
+    (model, epochs_run, best_val_loss, n_fit, n_val).
+    """
+    trainer = trainer if trainer is not None else train_model
+    X_fit, y_fit, X_val, y_val = chronological_val_split(X_train, y_train_z, val_fraction)
+    model, epochs_run, best_val_loss = trainer(X_fit, y_fit, X_val, y_val, n_features)
+    return model, epochs_run, best_val_loss, len(X_fit), len(X_val)

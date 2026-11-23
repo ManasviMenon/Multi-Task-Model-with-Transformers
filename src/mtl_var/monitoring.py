@@ -169,19 +169,9 @@ class BreachMonitor:
 
         rate = breaches / n
         boundary = breaches in (0, n)
-        if boundary:
-            # kupiec_from_counts returns NaN at zero or all breaches - the research convention of
-            # reporting the boundary as undefined rather than letting it underflow, where the
-            # verdict is then recorded as a FAIL. A monitor that turns NaN into "no rejection"
-            # would stay silent on the most extreme under-breach possible: zero breaches in 250
-            # days against 12.5 expected. The likelihood ratio has a well-defined limit at the
-            # boundary (p_hat^N (1-p_hat)^(T-N) is exactly 1), so use it.
-            from scipy.stats import chi2
-
-            lr = -2.0 * n * (np.log(1.0 - self.target) if breaches == 0 else np.log(self.target))
-            p = float(chi2.sf(lr, 1))
-        else:
-            p = kupiec_from_counts(breaches, n, self.target)
+        # kupiec_from_counts handles the boundary itself (0*log(0) = 0): zero breaches in 250
+        # days against 12.5 expected is a rejection, never a silent NaN.
+        p = kupiec_from_counts(breaches, n, self.target)
         rejects = bool(p is not None and not np.isnan(p) and p < 0.05)
         return {
             "status": "ok",

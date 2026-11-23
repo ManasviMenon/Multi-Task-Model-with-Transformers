@@ -44,7 +44,7 @@ from .data import (
     load_and_engineer_features,
     make_sequences,
 )
-from .model import WEIGHTS, train_model
+from .model import VAL_FRACTION, WEIGHTS, fit_with_train_tail_validation
 from .seeding import SEED, set_seeds
 
 RESULTS_PATH = "results/walk_forward_results.json"
@@ -59,13 +59,18 @@ FOLDS = [
 ]
 
 
+# RESULTS_PATH / PREDICTIONS_DIR above, and results/*_leakage_free*, hold the recorded runs, which
+# used each fold's TEST window for early stopping (RESULTS.md section 15). The pipeline no longer
+# does that, so its output goes to "_cleanval" paths and can never overwrite those records.
+EARLY_STOPPING = f"train_tail_{int(VAL_FRACTION * 100)}pct"
+
+
 def results_path(feature_set="original"):
-    """Original keeps its historical path; every other feature set gets its own file."""
-    return RESULTS_PATH if feature_set == "original" else f"results/walk_forward_results_{feature_set}.json"
+    return f"results/walk_forward_results_{feature_set}_cleanval.json"
 
 
 def predictions_dir(feature_set="original"):
-    return PREDICTIONS_DIR if feature_set == "original" else f"results/predictions_{feature_set}"
+    return f"results/predictions_{feature_set}_cleanval"
 
 
 def build_fold_data(fold_cfg, data, feature_names=FEATURES):
@@ -138,7 +143,7 @@ def _run_fold_impl(fold_cfg, data, seed, feature_set="original", save_prediction
 
     fd = build_fold_data(fold_cfg, data, feature_names)
     X_train, X_test = fd["X_train"], fd["X_test"]
-    y_train_z, y_test_z = fd["y_train_z"], fd["y_test_z"]
+    y_train_z = fd["y_train_z"]  # y_test_z is deliberately not taken: nothing in training sees it
     y_test_raw, target_scalers = fd["y_test_raw"], fd["target_scalers"]
     test_df = fd["test_df"]
 
@@ -149,8 +154,12 @@ def _run_fold_impl(fold_cfg, data, seed, feature_set="original", save_prediction
         fold_cfg, seed, len(X_train), len(X_test), n_features, SEQUENCE_LENGTH, TARGETS, WEIGHTS,
     ))
     tracking.log_params({"feature_set": feature_set})
-    model, epochs_run, best_val_loss = train_model(X_train, y_train_z, X_test, y_test_z, n_features)
-    print(f"trained {epochs_run} epochs, best val_loss={best_val_loss:.6f}", flush=True)
+    # Early stopping on the chronological tail of the training sequences. X_test / y_test are not
+    # passed: the test window is first touched by model.predict below, after training is final.
+    model, epochs_run, best_val_loss, n_fit, n_val = fit_with_train_tail_validation(
+        X_train, y_train_z, n_features)
+    print(f"trained {epochs_run} epochs on {n_fit} sequences, best val_loss={best_val_loss:.6f} "
+          f"on the last {n_val} training sequences", flush=True)
 
     preds = model.predict(X_test, verbose=0)
     native_preds = {}
@@ -223,6 +232,9 @@ def _run_fold_impl(fold_cfg, data, seed, feature_set="original", save_prediction
         "n_test": int(len(X_test)),
         "epochs_run": epochs_run,
         "best_val_loss": best_val_loss,
+        "early_stopping": EARLY_STOPPING,
+        "n_fit": int(n_fit),
+        "n_val": int(n_val),
         "accuracy": accuracy,
         "var_calibration": var_calibration,
         "rolling_calibration": rolling,
