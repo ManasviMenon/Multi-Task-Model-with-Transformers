@@ -1,0 +1,48 @@
+{
+  "case": "single_split_single_task_cleanval",
+  "epochs_run": 9,
+  "best_val_loss": 0.06122400032149421,
+  "n_fit": 3196,
+  "n_val": 564,
+  "n_test": 940,
+  "var_mae": 0.004260750987248527,
+  "var_calibration": {
+    "calib_n": 470,
+    "eval_n": 470,
+    "offset": -0.020296348940708482,
+    "uncalibrated": {
+      "breaches": 166,
+      "coverage": 0.35319148936170214,
+      "kupiec_p": 2.530346974426987e-92
+    },
+    "calibrated": {
+      "breaches": 17,
+      "coverage": 0.036170212765957444,
+      "kupiec_p": 0.14871244809066578
+    }
+  },
+  "frozen_backtest": {
+    "T": 470,
+    "N": 17,
+    "coverage": 0.036170212765957444,
+    "wilson95": [
+      0.022703568677804674,
+      0.057157444148879334
+    ],
+    "transitions": {
+      "n00": 435,
+      "n01": 17,
+      "n10": 17,
+      "n11": 0
+    },
+    "lr_pof": 2.0854083796386647,
+    "p_pof": 0.14871244809066578,
+    "lr_ind": 1.279062713091264,
+    "p_ind": 0.2580733806806112,
+    "lr_cc": 3.3644710927299286,
+    "p_cc": 0.18595779374548668,
+    "ind_testable": true,
+    "mean_exceedance": -0.005707480614159416,
+    "max_exceedance": -0.02484671583290883
+  }
+}
